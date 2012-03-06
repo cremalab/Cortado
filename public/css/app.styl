@@ -65,13 +65,20 @@ div.user_photo
 	overflow 		hidden
 	img 
 		width 	100%
-		height 	auto
+		height 	100%
 
 .textarea
+	position		relative
+	background 	url(../img/app/reorder.png) no-repeat center left
 	font-size 		15px
 	width 		100%
-	height 		30px
+	height 		20px
 	border 		none
+	padding-left 	30px
+	opacity 		.25
+
+.textarea.focus
+	opacity 		1
 
 .textarea:focus
 	outline 		none
@@ -95,8 +102,9 @@ div.user_photo
 		font-size			80%
 		padding 			2px
 		opacity			0
+		font-style 			italic
 		-webkit-transform 	translateY(-50px)
-		-webkit-transition-duration  .5s
+		-webkit-transition all .25s ease-out
 
 .hours.show
 		opacity			1
@@ -106,9 +114,20 @@ div.user_photo
 #stats
 	width					200px
 	float					right
+	font-size				17px
+
+	.date_weight
+		font-size 			15px
+		overflow 			hidden
+	.date
+		float 				left
+		color 			$grass
+		margin-right		10px
+	.weight 
+		color 			$magma
 
 	.hrs
-		font-size			17px
+		margin-bottom		4px
 		overflow			hidden
 		.hrs_spent
 			float 			left
@@ -122,3 +141,40 @@ div.user_photo
 			content		'/'
 		.hrs_total:after
 			content		'hrs'
+
+
+.person_selector.show
+	opacity 				1
+	-webkit-transform 		translateY(0)
+
+.person_selector
+	-webkit-transform 		translateY(-100%)
+	-webkit-transition all .25s ease-out
+	position				absolute
+	top 					0
+	opacity 				0
+	display 				inline-block
+	width 				160px
+	border 				1px dotted $grass
+	background-color 		#f5f9c3
+	font-size				14px
+	div.user_photo
+		float 				left
+		margin-right 		8px
+		width 			30px
+		height			30px
+	ul
+		margin 			0
+		padding-left 		0
+		list-style-type 		none
+	li 
+		padding 			7px
+		overflow 			hidden
+	li.selected
+		background-color 	#e1e5a8
+	span.name
+		margin-top		6px
+		display			block
+
+#hidden
+	display 				none

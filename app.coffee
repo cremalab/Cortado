@@ -1,11 +1,11 @@
 express		= require 'express'
-path		= require 'path'
-passport 	= require 'passport'
+path			= require 'path'
+passport 		= require 'passport'
 fs 			= require 'fs'
 stylus 		= require 'stylus'
-app 		= express.createServer()
+app 			= express.createServer()
 io			= require('socket.io').listen(app)
-port 		= 3000
+port 			= 3000
 
 LocalStrategy	= require('passport-local').Strategy
 
@@ -13,7 +13,7 @@ users = [
 	id: 		1
 	username:	'username'
 	password:	'password'
-	email:		'user@cremalab.com'
+	email:	'user@cremalab.com'
 ]
 	
 passport.serializeUser (user, done) ->
@@ -67,10 +67,17 @@ app.configure ->
 
 	app.use passport.initialize()
 	app.use passport.session()
-	
+
+
+date = new Date()
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+today = months[date.getMonth()] + ' ' + date.getUTCDate()
 
 app.get '/', (req, res) ->
 	res.render 'index'
+		today : today
+		num_requests : 3
+		breadcrumb : ['Southern Attraction', 'UX', 'HomePage']
 
 app.get '/login', (req, res) ->
 	res.render 'login'
