@@ -352,8 +352,39 @@ div.user_photo img {
   border: 1px solid #a6baa6;
   border-radius: 3px;
   background-color: #cae5cb;
-  color: slate;
   display: inline-block;
   font-size: 80%;
   padding: 2px;
+  opacity: 0;
+  -webkit-transform: translateY(-50px);
+  -webkit-transition-duration: 0.5s;
+}
+.hours.show {
+  opacity: 1;
+  -webkit-transform: translateY(0px);
+}
+#stats {
+  width: 200px;
+  float: right;
+}
+#stats .hrs {
+  font-size: 17px;
+  overflow: hidden;
+}
+#stats .hrs .hrs_spent {
+  float: left;
+  margin-right: 10px;
+  color: #e9cc19;
+}
+#stats .hrs .hrs_spent:after {
+  content: 'hrs';
+}
+#stats .hrs .hrs_total {
+  color: #b4deeb;
+}
+#stats .hrs .hrs_total:before {
+  content: '/';
+}
+#stats .hrs .hrs_total:after {
+  content: 'hrs';
 }

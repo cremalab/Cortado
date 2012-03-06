@@ -1,25 +1,54 @@
 (function() {
+  var last_four_keys, total_hours;
+
+  total_hours = 0;
+
+  last_four_keys = [];
 
   $(function() {
+    var add_to_hours;
     $('.textarea').focus();
     $('.textarea').live('click', function(e) {
       if ($(e.target).next().hasClass('wrap')) {
         return $(e.target).next().slideToggle();
       }
     });
-    /*
-    	key 'shift+3', (e, handler) ->
-    		new_text = ''
-    		$(e.target).bind 'keyup', (event) ->
-    			console.log event
-    			if event.keyCode != 51 || event.keyCode != 16
-    				
-    		#$(e.target).unbind('keyup')
-    		#$(e.target).append('<div class="hours">X hours</div> something')
-    
-    	#key 'shift+3', (e, handler) ->
-    		#$(e.target).append('<div class="hours">X hours</div> something')
-    */
+    $('.textarea').live('keyup', function(e) {
+      var current_char, end, full_string, index, start, string_num;
+      if (e.keyCode === 16) return false;
+      if (e.keyCode === 51 && e.shiftKey) e.keyCode = '#';
+      last_four_keys.unshift(e.keyCode);
+      if (last_four_keys.length > 4) last_four_keys.pop();
+      if (_.isEqual(last_four_keys, [83, 82, 72, "#"])) {
+        full_string = $(e.target).text();
+        start = full_string.search('#hrs');
+        end = start + 4;
+        index = start - 1;
+        current_char = parseInt(full_string.charAt(index));
+        string_num = '';
+        while (isFinite(current_char)) {
+          string_num = current_char + string_num;
+          current_char = parseInt(full_string.charAt(index -= 1));
+        }
+        if (isFinite(parseInt(string_num))) {
+          while (index <= end) {
+            full_string = full_string.replaceAt(index, ' ');
+            if (index === end) {
+              full_string = full_string.replaceAt(index, '<div contenteditable="false" class="hours">' + string_num + ' hours</div> ');
+            }
+            index++;
+          }
+          $(e.target).html(full_string);
+          setTimeout((function() {
+            return $(e.target).find('.hours').addClass('show');
+          }), 10);
+          return add_to_hours(parseInt(string_num));
+        }
+      }
+    });
+    add_to_hours = function(hrs) {
+      return $('.hrs_spent').text(total_hours += hrs);
+    };
     key('enter', function(e, handler) {
       e.preventDefault();
       $(e.target).parent().append('<div class="textarea"  contenteditable="true"></div>');
