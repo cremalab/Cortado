@@ -5,6 +5,8 @@ class BeanView extends Backbone.View
 
 	initialize : ->
 		@last_four_keys	= []
+		_.bindAll @,
+			'focus_me',
 
 	#TODO - this should be able to extend off of the Shortcut Keys instead of here
 	handle_keys : (e) ->
@@ -22,13 +24,41 @@ class BeanView extends Backbone.View
 		else
 			@key_record(e.keyCode, e.shiftKey)
 
+	add_hours_spent : ->
+		full_string 		= $(@el).find('.textarea').text()
+		index		= full_string.search('#hrs') - 1
+		current_char	= parseInt(full_string.charAt(index))
+		string_num	= ''
+
+		while isFinite(current_char)
+			string_num   = current_char + string_num
+			current_char = parseInt(full_string.charAt(index-=1))
+
+		if isFinite(parseInt(string_num))
+			#TODO - this should be it's own backbone view so we can delete them later
+			template = "<div class='hours'>#{string_num} hours</div>"
+			delete_me = string_num + '#hrs'
+			full_string = full_string.replace(delete_me, ' ')
+
+			$(@el).find('.textarea').text(full_string)
+			$(@el).find('.hour_wrap').append(template)
+
+			$(@el).find('.hrs_spent').text(@model.add_hours_spent(string_num))
+
+			#TODO - would be neat to have this more of a utility function. hate this syntax...
+			setTimeout (=> $(@el).find('.hours').addClass('show') ), 10
+
+
+	add_hours_estimated : ->
+		console.log 'est'
+
+
 	key_record : (code, shiftKey) ->
 		if code == 16 then return false
-		if code == 51 && shiftKey then code = '#'
 
 		if code == 50 && shiftKey
-			some_html = $('#hidden').html()
-			$(@el).append(some_html)
+			person_selector = new PersonSelector( collection : project.people)
+			$(@el).append(person_selector.render().el)
 			setTimeout (=>
 				$(@el).find('.person_selector').addClass('show')
 			), 10
@@ -38,29 +68,12 @@ class BeanView extends Backbone.View
 		if @last_four_keys.length > 4
 			@last_four_keys.pop()
 
-		if _.isEqual(@last_four_keys, [83, 82, 72, "#"])
-			full_string 		= $(@el).text()
-			start			= full_string.search('#hrs')
-			end			= start + 4
-			index		= start - 1
-			current_char	= parseInt(full_string.charAt(index))
-			string_num	= ''
+		if _.isEqual(@last_four_keys, [83, 82, 72, 51])
+			@add_hours_spent()
 
-			while isFinite(current_char)
-				string_num   = current_char + string_num
-				current_char = parseInt(full_string.charAt(index-=1))
-
-			if isFinite(parseInt(string_num))
-				while index <= end
-					full_string = full_string.replaceAt(index, ' ')
-					if index == end
-						full_string = full_string.replaceAt(index, '<div contenteditable="false" class="hours">' + string_num + ' hours</div> ')
-					index++
-				$(@el).html(full_string)
-				setTimeout (=>
-					$(@el).find('.hours').addClass('show')
-				), 10
-				add_to_hours(parseInt(string_num))
+		else if _.isEqual(@last_four_keys, [84, 83, 69, 51])
+			@add_hours_estimated()
+			
 
 	add_bean : ->
 		@save_content()
@@ -70,7 +83,7 @@ class BeanView extends Backbone.View
 
 	tab_over : ->
 		if @model != @model.collection.models[0] 
-
+			#TODO - look into using backbone relational
 			@save_content()
 
 			all_models	= @model.collection.models
@@ -82,32 +95,38 @@ class BeanView extends Backbone.View
 			parent.get('beans').add(@model)
 
 	tab_back : ->
-		@model.set(content : $(@el).html())
-		@model.collection.remove(@model)
-		#@model.get('parent').add(@model)
+		@save_content()
+		
+		if @model.get('parent') != ''
+			#TODO - look into using backbone relational
+			double = @model.get('parent').get('parent')
+			single = @model.get('parent')
+			@model.get('parent').get('beans').remove(@model)
+			@model.set('parent' : double)
+			single.collection.add(@model)
 
 	go_up : ->
 		if $(@el).prev().hasClass('bean')
-			$(@el).prev().focus()
+			@focus_me($(@el).prev())
 
 		else if $(@el).prev().hasClass('wrap')
 			#TODO - this should probably be more complicated
-			$(@el).prev().children('.bean:last').focus()
+			@focus_me($(@el).prev().children('.bean:last'))
 
 		else if $(@el).parent().prev().hasClass('bean')
-			$(@el).parent().prev().focus()
+			@focus_me($(@el).parent().prev())
 		
 		else if $(@el).parent().prev().hasClass('wrap')
-			$(@el).parent().prev().children('.bean:last').focus()
+			@focus_me($(@el).parent().prev().children('.bean:last'))
 
 		else return false
 
 	go_down : ->
 		if $(@el).next().hasClass('bean')
-			$(@el).next().focus()
+			@focus_me($(@el).next())
 
 		else if $(@el).next().hasClass('wrap')
-			$(@el).next().children('.bean:first').focus()
+			@focus_me($(@el).next().children('.bean:first'))
 
 		else
 			parent = $(@el).parent()
@@ -116,15 +135,19 @@ class BeanView extends Backbone.View
 				parent = parent.parent()
 			
 			if parent.attr('id') != 'cortado' 
-				parent.next().children('.bean:first').focus()
+				@focus_me(parent.next().children('.bean:first'))
 
 	save_content : ->
-		@model.set(content : $(@el).html())
+		@model.set(content : $(@el).find('.textarea').text())
+
+	focus_me : (el = $(@el)) ->
+		$('.bean').removeClass('focus')
+		el.addClass('focus')
+		el.find('.textarea').focus()
 
 	render : ->
 		@template = _.template($('#bean').html(), @model.toJSON())
 		$(@el).html(@template)
-		$(@el).attr('contenteditable', true)
 		return @
 
 
@@ -133,6 +156,8 @@ class window.Bean extends Backbone.Model
 	defaults :
 		parent : ''
 		content : ''
+		hours_estimated : 0
+		hours_spent : 0
 
 	initialize : ->
 		@set(beans : new Beans)
@@ -141,18 +166,20 @@ class window.Bean extends Backbone.Model
 		_.bindAll @,
 			'add_child',
 			'remove_child'
+			'add_hours_spent'
 
 	add_child : (added_bean) ->
 		view = $(@get('view').el)
 
-		unless view.next().hasClass('wrap')
-			view.after('<div class="wrap"></div>')
-
+		#unless view.next().hasClass('wrap')
+		view.find('.wrap').remove()
+		view.after('<div class="wrap"></div>')
 		wrap = view.next()
+
 		_.each @get('beans').models, (bean) =>
 			wrap.append(bean.get('view').render().el)
 			if added_bean == bean
-				$(bean.get('view').el).focus()
+				bean.get('view').focus_me()
 
 	remove_child : ->
 		view = $(@get('view').el)
@@ -161,14 +188,21 @@ class window.Bean extends Backbone.Model
 		_.each @get('beans').models, (bean) =>
 			wrap.append(bean.get('view').render().el)
 
+	add_hours_spent : (to_add) ->
+		hours = @get('hours_spent')  + parseInt(to_add)
+		@set('hours_spent' : hours)
+		return hours
+
+
 
 
 class window.Beans extends Backbone.Collection
 	initialize : ->
 		@on 'add', (bean) =>
-			bean_view 	= bean.get('view').render().el
+			bean_view 	= bean.get('view')
 			if @is_master == true
-				$('#cortado').find('.wrap').append(bean_view)
+				$('#cortado').find('.wrap').append(bean_view.render().el)
 			else
 				bean.get('parent').add_child(bean)
-			$(bean_view).focus()
+
+			bean_view.focus_me()

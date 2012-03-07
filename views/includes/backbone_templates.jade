@@ -1,2 +1,24 @@
 script#bean(type='text/template')
-	<%= content %>
+	.people
+	.stats
+		div.hrs
+			div.hrs_spent <%= hours_spent %>
+			div.hrs_total <%= hours_estimated %>
+		div.date_weight
+			div.date 0
+			div.weight 0
+
+	textarea.textarea
+		<%= content %>
+
+	.hour_wrap
+
+script#stats(type='text/template')
+
+script#person_selector(type='text/template')
+	ul
+
+script#barista(type='text/template')
+	div.user_photo
+		img(src="<%= img_src %>", alt="<%= name %>")
+	span.name <%= name %>

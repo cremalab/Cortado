@@ -1,0 +1,26 @@
+[
+	{
+		"name"  	: 	"Joe Longstreet",
+		"img_path" : 	"joe_longstreet.jpg"
+	},
+	{
+		"name"  	: 	"Rob LaFeve",
+		"img_path" : 	"rob_lafeve.jpg"
+	},
+	{
+		"name"  	: 	"Dan Linhart",
+		"img_path" : 	"rob_lafeve.jpg"
+	},
+	{
+		"name"  	: 	"George Brooks",
+		"img_path" : 	"george_brooks.jpg"
+	},
+	{
+		"name"  	: 	"Dustin Hayes",
+		"img_path" : 	"dustin_hayes.jpg"
+	},
+	{
+		"name"  	: 	"Ross Brown",
+		"img_path" : 	"ross_brown.jpg"
+	}
+]

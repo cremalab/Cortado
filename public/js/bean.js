@@ -18,7 +18,8 @@
     };
 
     BeanView.prototype.initialize = function() {
-      return this.last_four_keys = [];
+      this.last_four_keys = [];
+      return _.bindAll(this, 'focus_me');
     };
 
     BeanView.prototype.handle_keys = function(e) {
@@ -37,14 +38,43 @@
       }
     };
 
+    BeanView.prototype.add_hours_spent = function() {
+      var current_char, delete_me, full_string, index, string_num, template,
+        _this = this;
+      full_string = $(this.el).find('.textarea').text();
+      index = full_string.search('#hrs') - 1;
+      current_char = parseInt(full_string.charAt(index));
+      string_num = '';
+      while (isFinite(current_char)) {
+        string_num = current_char + string_num;
+        current_char = parseInt(full_string.charAt(index -= 1));
+      }
+      if (isFinite(parseInt(string_num))) {
+        template = "<div class='hours'>" + string_num + " hours</div>";
+        delete_me = string_num + '#hrs';
+        full_string = full_string.replace(delete_me, ' ');
+        $(this.el).find('.textarea').text(full_string);
+        $(this.el).find('.hour_wrap').append(template);
+        $(this.el).find('.hrs_spent').text(this.model.add_hours_spent(string_num));
+        return setTimeout((function() {
+          return $(_this.el).find('.hours').addClass('show');
+        }), 10);
+      }
+    };
+
+    BeanView.prototype.add_hours_estimated = function() {
+      return console.log('est');
+    };
+
     BeanView.prototype.key_record = function(code, shiftKey) {
-      var current_char, end, full_string, index, some_html, start, string_num,
+      var person_selector,
         _this = this;
       if (code === 16) return false;
-      if (code === 51 && shiftKey) code = '#';
       if (code === 50 && shiftKey) {
-        some_html = $('#hidden').html();
-        $(this.el).append(some_html);
+        person_selector = new PersonSelector({
+          collection: project.people
+        });
+        $(this.el).append(person_selector.render().el);
         setTimeout((function() {
           return $(_this.el).find('.person_selector').addClass('show');
         }), 10);
@@ -52,31 +82,10 @@
       }
       this.last_four_keys.unshift(code);
       if (this.last_four_keys.length > 4) this.last_four_keys.pop();
-      if (_.isEqual(this.last_four_keys, [83, 82, 72, "#"])) {
-        full_string = $(this.el).text();
-        start = full_string.search('#hrs');
-        end = start + 4;
-        index = start - 1;
-        current_char = parseInt(full_string.charAt(index));
-        string_num = '';
-        while (isFinite(current_char)) {
-          string_num = current_char + string_num;
-          current_char = parseInt(full_string.charAt(index -= 1));
-        }
-        if (isFinite(parseInt(string_num))) {
-          while (index <= end) {
-            full_string = full_string.replaceAt(index, ' ');
-            if (index === end) {
-              full_string = full_string.replaceAt(index, '<div contenteditable="false" class="hours">' + string_num + ' hours</div> ');
-            }
-            index++;
-          }
-          $(this.el).html(full_string);
-          setTimeout((function() {
-            return $(_this.el).find('.hours').addClass('show');
-          }), 10);
-          return add_to_hours(parseInt(string_num));
-        }
+      if (_.isEqual(this.last_four_keys, [83, 82, 72, 51])) {
+        return this.add_hours_spent();
+      } else if (_.isEqual(this.last_four_keys, [84, 83, 69, 51])) {
+        return this.add_hours_estimated();
       }
     };
 
@@ -106,21 +115,28 @@
     };
 
     BeanView.prototype.tab_back = function() {
-      this.model.set({
-        content: $(this.el).html()
-      });
-      return this.model.collection.remove(this.model);
+      var double, single;
+      this.save_content();
+      if (this.model.get('parent') !== '') {
+        double = this.model.get('parent').get('parent');
+        single = this.model.get('parent');
+        this.model.get('parent').get('beans').remove(this.model);
+        this.model.set({
+          'parent': double
+        });
+        return single.collection.add(this.model);
+      }
     };
 
     BeanView.prototype.go_up = function() {
       if ($(this.el).prev().hasClass('bean')) {
-        return $(this.el).prev().focus();
+        return this.focus_me($(this.el).prev());
       } else if ($(this.el).prev().hasClass('wrap')) {
-        return $(this.el).prev().children('.bean:last').focus();
+        return this.focus_me($(this.el).prev().children('.bean:last'));
       } else if ($(this.el).parent().prev().hasClass('bean')) {
-        return $(this.el).parent().prev().focus();
+        return this.focus_me($(this.el).parent().prev());
       } else if ($(this.el).parent().prev().hasClass('wrap')) {
-        return $(this.el).parent().prev().children('.bean:last').focus();
+        return this.focus_me($(this.el).parent().prev().children('.bean:last'));
       } else {
         return false;
       }
@@ -129,9 +145,9 @@
     BeanView.prototype.go_down = function() {
       var parent;
       if ($(this.el).next().hasClass('bean')) {
-        return $(this.el).next().focus();
+        return this.focus_me($(this.el).next());
       } else if ($(this.el).next().hasClass('wrap')) {
-        return $(this.el).next().children('.bean:first').focus();
+        return this.focus_me($(this.el).next().children('.bean:first'));
       } else {
         parent = $(this.el).parent();
         while (!(parent.next().hasClass('bean')) || !(parent.next().hasClass('wrap'))) {
@@ -139,21 +155,27 @@
           parent = parent.parent();
         }
         if (parent.attr('id') !== 'cortado') {
-          return parent.next().children('.bean:first').focus();
+          return this.focus_me(parent.next().children('.bean:first'));
         }
       }
     };
 
     BeanView.prototype.save_content = function() {
       return this.model.set({
-        content: $(this.el).html()
+        content: $(this.el).find('.textarea').text()
       });
+    };
+
+    BeanView.prototype.focus_me = function(el) {
+      if (el == null) el = $(this.el);
+      $('.bean').removeClass('focus');
+      el.addClass('focus');
+      return el.find('.textarea').focus();
     };
 
     BeanView.prototype.render = function() {
       this.template = _.template($('#bean').html(), this.model.toJSON());
       $(this.el).html(this.template);
-      $(this.el).attr('contenteditable', true);
       return this;
     };
 
@@ -171,7 +193,9 @@
 
     Bean.prototype.defaults = {
       parent: '',
-      content: ''
+      content: '',
+      hours_estimated: 0,
+      hours_spent: 0
     };
 
     Bean.prototype.initialize = function() {
@@ -183,18 +207,19 @@
           model: this
         })
       });
-      return _.bindAll(this, 'add_child', 'remove_child');
+      return _.bindAll(this, 'add_child', 'remove_child', 'add_hours_spent');
     };
 
     Bean.prototype.add_child = function(added_bean) {
       var view, wrap,
         _this = this;
       view = $(this.get('view').el);
-      if (!view.next().hasClass('wrap')) view.after('<div class="wrap"></div>');
+      view.find('.wrap').remove();
+      view.after('<div class="wrap"></div>');
       wrap = view.next();
       return _.each(this.get('beans').models, function(bean) {
         wrap.append(bean.get('view').render().el);
-        if (added_bean === bean) return $(bean.get('view').el).focus();
+        if (added_bean === bean) return bean.get('view').focus_me();
       });
     };
 
@@ -207,6 +232,15 @@
       return _.each(this.get('beans').models, function(bean) {
         return wrap.append(bean.get('view').render().el);
       });
+    };
+
+    Bean.prototype.add_hours_spent = function(to_add) {
+      var hours;
+      hours = this.get('hours_spent') + parseInt(to_add);
+      this.set({
+        'hours_spent': hours
+      });
+      return hours;
     };
 
     return Bean;
@@ -225,13 +259,13 @@
       var _this = this;
       return this.on('add', function(bean) {
         var bean_view;
-        bean_view = bean.get('view').render().el;
+        bean_view = bean.get('view');
         if (_this.is_master === true) {
-          $('#cortado').find('.wrap').append(bean_view);
+          $('#cortado').find('.wrap').append(bean_view.render().el);
         } else {
           bean.get('parent').add_child(bean);
         }
-        return $(bean_view).focus();
+        return bean_view.focus_me();
       });
     };
 

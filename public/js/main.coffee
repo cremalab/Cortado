@@ -16,14 +16,23 @@ class ShortcutKeys extends Backbone.Shortcuts
 		e.preventDefault()
 
 
+
 class Project extends Backbone.Model
 	initialize : ->
 		@set('beans' : new Beans)
-		@get('beans').is_master = true
+		@get('beans').is_master = true 
+
+		people = new Backbone.Collection
+		people.url = '/data/people.json'
+		
+		people.fetch
+			success : =>
+				@set('people' : people)
 
 
 
 create_new_project = ->
+
 	window.project 	= new Project
 	new_bean		= new Bean
 	project.get('beans').add(new_bean)

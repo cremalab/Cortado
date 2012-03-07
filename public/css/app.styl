@@ -75,13 +75,31 @@ div.user_photo
 	font-size 		15px
 	width 		100%
 	height 		20px
-	border 		none
 	padding-left 	30px
+	z-index 		1
 	opacity 		.25
+	-webkit-transform 	translateY(-3px)
+	-webkit-transition all .25s ease-out
+	.stats
+		display 	none
+	.textarea
+		font-size 		15px
+		display 		inline-block
+		width 		600px
+		margin-bottom  7px
+		border 		none
+		outline 		none
+	.hour_wrap
+		display 		none
 
-.bean:focus
+.bean.focus
+	-webkit-transform 	translateY(0px)
 	opacity 		1
-	outline 		none
+	z-index 		2
+	.stats
+		display 	block
+	.hour_wrap
+		display 		block
 
 .wrap
 	margin-left 	40px
@@ -101,17 +119,18 @@ div.user_photo
 		display 			inline-block
 		font-size			80%
 		padding 			2px
-		opacity			0
+		opacity			.25
 		font-style 			italic
-		-webkit-transform 	translateY(-50px)
-		-webkit-transition all .25s ease-out
+		margin-right		5px
+		-webkit-transform 	translateY(-25px)
+		-webkit-transition all .1s ease-out
 
 .hours.show
 		opacity			1
 		-webkit-transform 	translateY(0px)
 
 
-#stats
+.stats
 	width					200px
 	float					right
 	font-size				17px

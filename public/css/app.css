@@ -334,13 +334,36 @@ div.user_photo img {
   font-size: 15px;
   width: 100%;
   height: 20px;
-  border: none;
   padding-left: 30px;
+  z-index: 1;
   opacity: 0.25;
+  -webkit-transform: translateY(-3px);
+  -webkit-transition: all 0.25s ease-out;
 }
-.bean:focus {
-  opacity: 1;
+.bean .stats {
+  display: none;
+}
+.bean .textarea {
+  font-size: 15px;
+  display: inline-block;
+  width: 600px;
+  margin-bottom: 7px;
+  border: none;
   outline: none;
+}
+.bean .hour_wrap {
+  display: none;
+}
+.bean.focus {
+  -webkit-transform: translateY(0px);
+  opacity: 1;
+  z-index: 2;
+}
+.bean.focus .stats {
+  display: block;
+}
+.bean.focus .hour_wrap {
+  display: block;
 }
 .wrap {
   margin-left: 40px;
@@ -361,51 +384,52 @@ div.user_photo img {
   display: inline-block;
   font-size: 80%;
   padding: 2px;
-  opacity: 0;
+  opacity: 0.25;
   font-style: italic;
-  -webkit-transform: translateY(-50px);
-  -webkit-transition: all 0.25s ease-out;
+  margin-right: 5px;
+  -webkit-transform: translateY(-25px);
+  -webkit-transition: all 0.1s ease-out;
 }
 .hours.show {
   opacity: 1;
   -webkit-transform: translateY(0px);
 }
-#stats {
+.stats {
   width: 200px;
   float: right;
   font-size: 17px;
 }
-#stats .date_weight {
+.stats .date_weight {
   font-size: 15px;
   overflow: hidden;
 }
-#stats .date {
+.stats .date {
   float: left;
   color: #a9b328;
   margin-right: 10px;
 }
-#stats .weight {
+.stats .weight {
   color: #c60;
 }
-#stats .hrs {
+.stats .hrs {
   margin-bottom: 4px;
   overflow: hidden;
 }
-#stats .hrs .hrs_spent {
+.stats .hrs .hrs_spent {
   float: left;
   margin-right: 10px;
   color: #e9cc19;
 }
-#stats .hrs .hrs_spent:after {
+.stats .hrs .hrs_spent:after {
   content: 'hrs';
 }
-#stats .hrs .hrs_total {
+.stats .hrs .hrs_total {
   color: #b4deeb;
 }
-#stats .hrs .hrs_total:before {
+.stats .hrs .hrs_total:before {
   content: '/';
 }
-#stats .hrs .hrs_total:after {
+.stats .hrs .hrs_total:after {
   content: 'hrs';
 }
 .person_selector.show {

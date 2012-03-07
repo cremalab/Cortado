@@ -44,10 +44,21 @@
     }
 
     Project.prototype.initialize = function() {
+      var people,
+        _this = this;
       this.set({
         'beans': new Beans
       });
-      return this.get('beans').is_master = true;
+      this.get('beans').is_master = true;
+      people = new Backbone.Collection;
+      people.url = '/data/people.json';
+      return people.fetch({
+        success: function() {
+          return _this.set({
+            'people': people
+          });
+        }
+      });
     };
 
     return Project;
