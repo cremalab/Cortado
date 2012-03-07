@@ -274,23 +274,24 @@ input[type='search'] {
 header {
   margin: 40px 0;
 }
-#breadcrumb {
+header.document {
+  padding: 1px 0;
   margin-bottom: 30px;
   border-bottom: 2px dotted #b4deeb;
 }
-#breadcrumb ul {
+header.document ul {
   padding-left: 0;
   overflow: hidden;
   list-style-type: none;
 }
-#breadcrumb ul li {
+header.document ul li {
   float: left;
   margin-right: 10px;
 }
-#breadcrumb ul .chevron {
+header.document ul .chevron {
   margin-left: 10px;
 }
-#breadcrumb ul li:last-child .chevron {
+header.document ul li:last-child .chevron {
   display: none;
 }
 #requests {
@@ -327,7 +328,7 @@ div.user_photo img {
   width: 100%;
   height: 100%;
 }
-.textarea {
+.bean {
   position: relative;
   background: url("../img/app/reorder.png") no-repeat center left;
   font-size: 15px;
@@ -337,10 +338,8 @@ div.user_photo img {
   padding-left: 30px;
   opacity: 0.25;
 }
-.textarea.focus {
+.bean:focus {
   opacity: 1;
-}
-.textarea:focus {
   outline: none;
 }
 .wrap {
@@ -449,4 +448,14 @@ div.user_photo img {
 }
 #hidden {
   display: none;
+}
+a#save {
+  color: #000;
+  text-decoration: none;
+  float: right;
+  display: inline-block;
+  padding: 5px;
+  background-color: #eb9e51;
+  border: 1px solid #c60;
+  border-radius: 3px;
 }

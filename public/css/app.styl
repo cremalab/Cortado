@@ -5,6 +5,7 @@ $ocean 				= #b4deeb
 $mustard 				= #e9cc19
 $grass 				= #a9b328
 $magma 				= #cc6600
+$magma_lite 			= #eb9e51
 $seafoam 				= #cae5cb
 $seafoam_dk 			= #a6baa6
 
@@ -22,7 +23,8 @@ input[type='search']
 header
 	margin 			40px 0
 
-#breadcrumb
+header.document
+	padding 			1px 0
 	margin-bottom	 	30px
 	border-bottom 		2px dotted $ocean
 	ul
@@ -67,7 +69,7 @@ div.user_photo
 		width 	100%
 		height 	100%
 
-.textarea
+.bean
 	position		relative
 	background 	url(../img/app/reorder.png) no-repeat center left
 	font-size 		15px
@@ -77,10 +79,8 @@ div.user_photo
 	padding-left 	30px
 	opacity 		.25
 
-.textarea.focus
+.bean:focus
 	opacity 		1
-
-.textarea:focus
 	outline 		none
 
 .wrap
@@ -178,3 +178,13 @@ div.user_photo
 
 #hidden
 	display 				none
+
+a#save
+	color 				black
+	text-decoration 			none
+	float					right
+	display 				inline-block
+	padding 				5px
+	background-color 		$magma_lite
+	border 				1px solid $magma
+	border-radius			3px

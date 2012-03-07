@@ -3,10 +3,13 @@ html(lang='en')
 	head
 	title Hello, How Are You?
 	link(rel='stylesheet', href='/css/app.css')
-	script(src='/js/jquery-1.7.1.min.js')
-	script(src='/js/underscore.js')
-	script(src='/js/keymaster.js')
+	script(src='/js/vendor/jquery-1.7.1.min.js')
+	script(src='/js/vendor/underscore.js')
+	script(src='/js/vendor/backbone.js')
+	script(src='/js/vendor/backbone.shortcuts.js')
+	script(src='/js/vendor/keymaster.js')
 	script(src='/js/utilities.js')
+	script(src='/js/bean.js')
 	script(src='/js/main.js')
 	body
 		div#wrap
@@ -19,3 +22,5 @@ html(lang='en')
 					div.number= num_requests
 
 			!= body
+
+		include includes/backbone_templates

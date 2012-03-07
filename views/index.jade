@@ -1,8 +1,10 @@
-div#breadcrumb
-	ul
-		each item in breadcrumb
-			li= item
-				span.chevron &gt;
+header.document
+	a#save(href='#') Save
+	div#breadcrumb
+		ul
+			each item in breadcrumb
+				li= item
+					span.chevron &gt;
 
 #stats
 	.hrs
@@ -14,7 +16,6 @@ div#breadcrumb
 
 #cortado
 	.wrap
-		div.textarea(contenteditable='true')
 
 #hidden
 	div.person_selector
