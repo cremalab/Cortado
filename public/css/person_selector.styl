@@ -1,0 +1,42 @@
+.person_selector.show
+	opacity 				1
+	-webkit-transform 		translateY(0)
+
+.person_selector
+	-webkit-transform 		translateY(-100%)
+	-webkit-transition all .25s ease-out
+	display 				inline-block
+	top 					0
+	position				absolute
+	opacity 				0
+	width 				160px
+	border 				1px dotted $grass
+	background-color 		$grass_lite
+	font-size				14px
+	z-index	 			2
+	input
+		width 			140px
+		margin 			5px auto
+		border 			1px solid $slate
+		font-size 			14px
+		display 			block
+		padding 			5px
+		outline 			none
+	div.user_photo
+		float 				left
+		margin-right 		8px
+		width 			30px
+		height			30px
+	span.uid
+		display 			none
+
+	// ---- User Photos ---- //
+	li 
+		padding 			7px
+		overflow 			hidden
+	li.selected
+		background-color 	#e1e5a8
+	span.name
+		margin-top		6px
+		display			block
+	// ---- User Photos ---- //

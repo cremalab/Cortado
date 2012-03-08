@@ -3,26 +3,25 @@ class BeanView extends Backbone.View
 	events :
 		'keyup': 'handle_keys'
 
+
 	initialize : ->
 		@last_four_keys	= []
 		_.bindAll @,
-			'focus_me',
+			'focus_me'
+			'add_user'
 
-	#TODO - this should be able to extend off of the Shortcut Keys instead of here
+
 	handle_keys : (e) ->
+		if !@person_selector
+			if e.keyCode == 13
+				if $(@el).text() != '' then @add_bean()
+			else if e.keyCode == 9 && e.shiftKey == true
+				@tab_back($(@el))
+			else if e.keyCode == 9 then @tab_over()
+			else if e.keyCode == 38 then @go_up()
+			else if e.keyCode == 40 then @go_down()
+			else @key_record(e.keyCode, e.shiftKey)
 
-		if e.keyCode == 13
-			if $(@el).text() != '' then @add_bean()
-		else if e.keyCode == 9 && e.shiftKey == true
-			@tab_back($(@el))
-		else if e.keyCode == 9
-			@tab_over()
-		else if e.keyCode == 38
-			@go_up()
-		else if e.keyCode == 40
-			@go_down()
-		else
-			@key_record(e.keyCode, e.shiftKey)
 
 	add_hours_spent : ->
 		full_string 		= $(@el).find('.textarea').text()
@@ -53,16 +52,29 @@ class BeanView extends Backbone.View
 		console.log 'est'
 
 
+	add_user : (user) ->
+		wrap 		= $(@el).find('.people')
+		name		= user.get('name')
+		img_path	= user.get('img_path')
+		template 	= "<div class='user_photo'><img class='user' src=/img/#{img_path} alt=#{name} /></div>"
+
+		wrap.append template
+		setTimeout (=> $(@el).find('.user').addClass('show') ), 10
+
+
 	key_record : (code, shiftKey) ->
 		if code == 16 then return false
 
 		if code == 50 && shiftKey
-			person_selector = new PersonSelector( collection : project.people)
-			$(@el).append(person_selector.render().el)
-			setTimeout (=>
-				$(@el).find('.person_selector').addClass('show')
-			), 10
-			return false
+			@person_selector = new PersonSelector
+				collection 	: project.get('people')
+				parent 	: @
+
+			$(@el).find('.textarea').append(@person_selector.render().el)
+			$(@el).find('.person_selector').find('li:first-child').addClass('selected')
+			$(@el).find('.person_selector').find('input').focus()
+
+			setTimeout (=>  $(@el).find('.person_selector').addClass('show') ), 10
 
 		@last_four_keys.unshift(code)
 		if @last_four_keys.length > 4
@@ -165,9 +177,10 @@ window.Bean = Backbone.RelationalModel.extend(
 		@set(view : new BeanView(model : @))
 
 		_.bindAll @,
-			'add_child',
+			'add_child'
 			'remove_child'
 			'add_hours_spent'
+			'add_user'
 
 		@on 'change:my_hours_spent',  =>
 
@@ -205,8 +218,6 @@ window.Bean = Backbone.RelationalModel.extend(
 		view = $(@get('view').el)
 
 		#TODO - this actually isn't working right yet
-		#unless view.next().hasClass('wrap')
-		#view.parent().find('.wrap').remove()
 		view.after('<div class="wrap"></div>')
 		wrap = view.next()
 
@@ -214,6 +225,11 @@ window.Bean = Backbone.RelationalModel.extend(
 			wrap.append(bean.get('view').render().el)
 			if added_bean == bean
 				bean.get('view').focus_me()
+
+	add_user : (uid) ->
+		uid	= parseInt(uid)
+		_.each project.get('people').models, (person) =>
+			if person.get('uid') == uid  then @get('view').add_user(person)
 
 	remove_child : ->
 		view = $(@get('view').el)

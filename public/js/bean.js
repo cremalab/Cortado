@@ -19,22 +19,24 @@
 
     BeanView.prototype.initialize = function() {
       this.last_four_keys = [];
-      return _.bindAll(this, 'focus_me');
+      return _.bindAll(this, 'focus_me', 'add_user');
     };
 
     BeanView.prototype.handle_keys = function(e) {
-      if (e.keyCode === 13) {
-        if ($(this.el).text() !== '') return this.add_bean();
-      } else if (e.keyCode === 9 && e.shiftKey === true) {
-        return this.tab_back($(this.el));
-      } else if (e.keyCode === 9) {
-        return this.tab_over();
-      } else if (e.keyCode === 38) {
-        return this.go_up();
-      } else if (e.keyCode === 40) {
-        return this.go_down();
-      } else {
-        return this.key_record(e.keyCode, e.shiftKey);
+      if (!this.person_selector) {
+        if (e.keyCode === 13) {
+          if ($(this.el).text() !== '') return this.add_bean();
+        } else if (e.keyCode === 9 && e.shiftKey === true) {
+          return this.tab_back($(this.el));
+        } else if (e.keyCode === 9) {
+          return this.tab_over();
+        } else if (e.keyCode === 38) {
+          return this.go_up();
+        } else if (e.keyCode === 40) {
+          return this.go_down();
+        } else {
+          return this.key_record(e.keyCode, e.shiftKey);
+        }
       }
     };
 
@@ -66,19 +68,33 @@
       return console.log('est');
     };
 
-    BeanView.prototype.key_record = function(code, shiftKey) {
-      var person_selector,
+    BeanView.prototype.add_user = function(user) {
+      var img_path, name, template, wrap,
         _this = this;
+      wrap = $(this.el).find('.people');
+      name = user.get('name');
+      img_path = user.get('img_path');
+      template = "<div class='user_photo'><img class='user' src=/img/" + img_path + " alt=" + name + " /></div>";
+      wrap.append(template);
+      return setTimeout((function() {
+        return $(_this.el).find('.user').addClass('show');
+      }), 10);
+    };
+
+    BeanView.prototype.key_record = function(code, shiftKey) {
+      var _this = this;
       if (code === 16) return false;
       if (code === 50 && shiftKey) {
-        person_selector = new PersonSelector({
-          collection: project.people
+        this.person_selector = new PersonSelector({
+          collection: project.get('people'),
+          parent: this
         });
-        $(this.el).append(person_selector.render().el);
+        $(this.el).find('.textarea').append(this.person_selector.render().el);
+        $(this.el).find('.person_selector').find('li:first-child').addClass('selected');
+        $(this.el).find('.person_selector').find('input').focus();
         setTimeout((function() {
           return $(_this.el).find('.person_selector').addClass('show');
         }), 10);
-        return false;
       }
       this.last_four_keys.unshift(code);
       if (this.last_four_keys.length > 4) this.last_four_keys.pop();
@@ -193,7 +209,7 @@
           model: this
         })
       });
-      _.bindAll(this, 'add_child', 'remove_child', 'add_hours_spent');
+      _.bindAll(this, 'add_child', 'remove_child', 'add_hours_spent', 'add_user');
       this.on('change:my_hours_spent', function() {
         var parent, parents_hours, total_hours;
         total_hours = _this.get('my_hours_spent');
@@ -240,6 +256,13 @@
       return _.each(this.get('children').models, function(bean) {
         wrap.append(bean.get('view').render().el);
         if (added_bean === bean) return bean.get('view').focus_me();
+      });
+    },
+    add_user: function(uid) {
+      var _this = this;
+      uid = parseInt(uid);
+      return _.each(project.get('people').models, function(person) {
+        if (person.get('uid') === uid) return _this.get('view').add_user(person);
       });
     },
     remove_child: function() {

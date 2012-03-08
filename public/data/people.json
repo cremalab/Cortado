@@ -1,25 +1,31 @@
 [
 	{
+		"uid"		:	1,
 		"name"  	: 	"Joe Longstreet",
 		"img_path" : 	"joe_longstreet.jpg"
 	},
 	{
+		"uid"		:	2,
 		"name"  	: 	"Rob LaFeve",
 		"img_path" : 	"rob_lafeve.jpg"
 	},
 	{
+		"uid"		:	3,
 		"name"  	: 	"Dan Linhart",
-		"img_path" : 	"rob_lafeve.jpg"
+		"img_path" : 	"dan_linhart.jpg"
 	},
 	{
+		"uid"		:	4,
 		"name"  	: 	"George Brooks",
 		"img_path" : 	"george_brooks.jpg"
 	},
 	{
+		"uid"		:	5,
 		"name"  	: 	"Dustin Hayes",
 		"img_path" : 	"dustin_hayes.jpg"
 	},
 	{
+		"uid"		:	6,
 		"name"  	: 	"Ross Brown",
 		"img_path" : 	"ross_brown.jpg"
 	}

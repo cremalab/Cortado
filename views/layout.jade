@@ -15,7 +15,7 @@ html(lang='en')
 	script(src='/js/main.js')
 	body
 		div#wrap
-			header
+			header#main
 				input(type='search', placeholder='Search')
 				div#requests
 					p Pending Requests
@@ -24,5 +24,4 @@ html(lang='en')
 					div.number= num_requests
 
 			!= body
-
 		include includes/backbone_templates
