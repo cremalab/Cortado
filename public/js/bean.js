@@ -19,13 +19,16 @@
 
     BeanView.prototype.initialize = function() {
       this.last_four_keys = [];
-      return _.bindAll(this, 'focus_me', 'add_user', 'change_hours_spent', 'update_hours_spent');
+      return _.bindAll(this, 'focus_me', 'add_user', 'append_child_bean', 'change_hours_spent', 'update_hours_spent');
     };
 
     BeanView.prototype.handle_keys = function(e) {
       if (!this.person_selector) {
         if (e.keyCode === 13) {
-          if ($(this.el).text() !== '') return this.add_bean();
+          if ($(this.el).find('.textarea').text().length > 1) {
+            this.save_content();
+            return this.model.get('parent').get('children').add(new Bean);
+          }
         } else if (e.keyCode === 9 && e.shiftKey === true) {
           return this.tab_back($(this.el));
         } else if (e.keyCode === 9) {
@@ -114,9 +117,14 @@
       }
     };
 
-    BeanView.prototype.add_bean = function() {
-      this.save_content();
-      return this.model.get('parent').get('children').add(new Bean);
+    BeanView.prototype.append_child_bean = function(bean) {
+      var new_bean;
+      if (!$(this.el).next().hasClass('wrap')) {
+        $(this.el).after('<div class="wrap"></div>');
+      }
+      new_bean = bean.get('view').render().el;
+      $(this.el).next().append(new_bean);
+      return $(new_bean).find('.textarea').focus();
     };
 
     BeanView.prototype.tab_over = function() {
@@ -220,7 +228,7 @@
           model: this
         })
       });
-      _.bindAll(this, 'add_bean', 'remove_bean', 'add_user', 'update_hours_spent', 'update_hours_estimated');
+      _.bindAll(this, 'remove_bean', 'add_user', 'update_hours_spent', 'update_hours_estimated');
       this.on('change:my_hours_spent', function() {
         var parent;
         if (!_this.get('children').models.length) {
@@ -257,17 +265,6 @@
       });
     },
     update_hours_estimated: function() {},
-    add_bean: function(added_bean) {
-      var view, wrap,
-        _this = this;
-      view = $(this.get('view').el);
-      view.after('<div class="wrap"></div>');
-      wrap = view.next();
-      return _.each(this.get('children').models, function(bean) {
-        wrap.append(bean.get('view').render().el);
-        if (added_bean === bean) return bean.get('view').focus_me();
-      });
-    },
     remove_bean: function() {
       var view, wrap,
         _this = this;
@@ -297,7 +294,7 @@
           $('#cortado').find('.wrap').append(bean_view.render().el);
         } else {
           setTimeout((function() {
-            return bean.get('parent').add_bean(bean);
+            return bean.get('parent').get('view').append_child_bean(bean);
           }), 10);
         }
         return bean_view.focus_me();

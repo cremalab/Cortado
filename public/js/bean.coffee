@@ -9,6 +9,7 @@ class BeanView extends Backbone.View
 		_.bindAll @,
 			'focus_me'
 			'add_user'
+			'append_child_bean'
 			'change_hours_spent'
 			'update_hours_spent'
 
@@ -16,7 +17,9 @@ class BeanView extends Backbone.View
 	handle_keys : (e) ->
 		if !@person_selector
 			if e.keyCode == 13
-				if $(@el).text() != '' then @add_bean()
+				if $(@el).find('.textarea').text().length > 1
+					@save_content()
+					@model.get('parent').get('children').add(new Bean)
 			else if e.keyCode == 9 && e.shiftKey == true
 				@tab_back($(@el))
 			else if e.keyCode == 9 then @tab_over()
@@ -60,7 +63,7 @@ class BeanView extends Backbone.View
 		$(@el).find('.hrs_total').text(hrs)
 
 	add_user : (user) ->
-		#TODO - this actually needs 
+		#TODO - this actually needs  to work
 		wrap 		= $(@el).find('.people')
 		name		= user.get('name')
 		img_path	= user.get('img_path')
@@ -93,11 +96,16 @@ class BeanView extends Backbone.View
 
 		else if _.isEqual(@last_four_keys, [84, 83, 69, 51])
 			@change_hours_estimated()
-			
 
-	add_bean : ->
-		@save_content()
-		@model.get('parent').get('children').add(new Bean)
+
+	append_child_bean : (bean) ->
+
+		unless $(@el).next().hasClass('wrap')
+			$(@el).after('<div class="wrap"></div>')
+		
+		new_bean = bean.get('view').render().el
+		$(@el).next().append(new_bean)
+		$(new_bean).find('.textarea').focus()
 
 	tab_over : ->
 		if @model != @model.collection.models[0] 
@@ -105,7 +113,6 @@ class BeanView extends Backbone.View
 			current_parent	= @model.get('parent').get('children')
 			this_index	 	= _.indexOf(current_parent.models, @model)
 			new_parent 	= current_parent.models[this_index - 1].get('children').add(@model)
-
 
 	tab_back : ->
 		if @model.get('parent')
@@ -187,7 +194,6 @@ window.Bean = Backbone.RelationalModel.extend(
 		@set(view : new BeanView(model : @))
 
 		_.bindAll @,
-			'add_bean'
 			'remove_bean'
 			'add_user'
 			'update_hours_spent'
@@ -222,17 +228,6 @@ window.Bean = Backbone.RelationalModel.extend(
 	update_hours_estimated : ->
 
 
-	add_bean : (added_bean) ->
-		view = $(@get('view').el)
-
-		#TODO - this actually isn't working right yet
-		view.after('<div class="wrap"></div>')
-		wrap = view.next()
-
-		_.each @get('children').models, (bean) =>
-			wrap.append(bean.get('view').render().el)
-			if added_bean == bean
-				bean.get('view').focus_me()
 
 	remove_bean : ->
 		view = $(@get('view').el)
@@ -257,7 +252,7 @@ window.Beans = Backbone.Collection.extend(
 				$('#cortado').find('.wrap').append(bean_view.render().el)
 			else
 				#TODO - this is a major design flaw. See Backbone relational documentation and fix at some point
-				setTimeout (=>  bean.get('parent').add_bean(bean) ), 10
+				setTimeout (=>  bean.get('parent').get('view').append_child_bean(bean) ), 10
 
 			bean_view.focus_me()
 )
