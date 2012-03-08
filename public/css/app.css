@@ -346,7 +346,7 @@ div.user_photo img {
 .bean .textarea {
   font-size: 15px;
   display: inline-block;
-  width: 600px;
+  width: 500px;
   margin-bottom: 7px;
   border: none;
   outline: none;
@@ -390,12 +390,15 @@ div.user_photo img {
   -webkit-transform: translateY(-25px);
   -webkit-transition: all 0.1s ease-out;
 }
+.hours:after {
+  content: ' hours';
+}
 .hours.show {
   opacity: 1;
   -webkit-transform: translateY(0px);
 }
 .stats {
-  width: 200px;
+  width: 125px;
   float: right;
   font-size: 17px;
 }

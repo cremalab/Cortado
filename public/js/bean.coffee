@@ -36,14 +36,14 @@ class BeanView extends Backbone.View
 
 		if isFinite(parseInt(string_num))
 			#TODO - this should be it's own backbone view so we can delete them later
-			template = "<div class='hours'>#{string_num} hours</div>"
+			template = "<div class='hours'>#{string_num}</div>"
 			delete_me = string_num + '#hrs'
 			full_string = full_string.replace(delete_me, ' ')
 
 			$(@el).find('.textarea').text(full_string)
 			$(@el).find('.hour_wrap').append(template)
 
-			$(@el).find('.hrs_spent').text(@model.add_hours_spent(string_num))
+			@model.add_hours_spent(string_num)
 
 			#TODO - would be neat to have this more of a utility function. hate this syntax...
 			setTimeout (=> $(@el).find('.hours').addClass('show') ), 10
@@ -77,33 +77,21 @@ class BeanView extends Backbone.View
 
 	add_bean : ->
 		@save_content()
-		new_bean = new Bean
-		new_bean.set('parent' : @model.get('parent'))
-		@model.collection.add(new_bean)
+		@model.get('parent').get('children').add(new Bean)
 
 	tab_over : ->
 		if @model != @model.collection.models[0] 
-			#TODO - look into using backbone relational
 			@save_content()
+			current_parent	= @model.get('parent').get('children')
+			this_index	 	= _.indexOf(current_parent.models, @model)
+			new_parent 	= current_parent.models[this_index - 1].get('children').add(@model)
 
-			all_models	= @model.collection.models
-			this_index 	= _.indexOf(all_models, @model)
-			parent 	= all_models[this_index - 1]
-
-			@model.collection.remove(@model)
-			@model.set('parent' : parent)
-			parent.get('beans').add(@model)
 
 	tab_back : ->
-		@save_content()
-		
-		if @model.get('parent') != ''
-			#TODO - look into using backbone relational
-			double = @model.get('parent').get('parent')
-			single = @model.get('parent')
-			@model.get('parent').get('beans').remove(@model)
-			@model.set('parent' : double)
-			single.collection.add(@model)
+		if @model.get('parent')
+			@save_content()
+			@model.get('parent').get('parent').get('children').add(@model)
+
 
 	go_up : ->
 		if $(@el).prev().hasClass('bean')
@@ -151,16 +139,29 @@ class BeanView extends Backbone.View
 		return @
 
 
-class window.Bean extends Backbone.Model
+
+
+window.Bean = Backbone.RelationalModel.extend(
+	
+	relations : [
+		type			: Backbone.HasMany
+		key 			: 'children'
+		relatedModel 	: 'Bean'
+		collectionType 	: 'Beans'
+		reverseRelation	:
+			key 		: 'parent'
+			type 		: Backbone.HasOne
+	]
 	
 	defaults :
-		parent : ''
-		content : ''
-		hours_estimated : 0
-		hours_spent : 0
+		content 		: ''
+		my_hours_est 	: 0
+		my_hours_spent	: 0
+		hours_est 		: 0
+		hours_spent 	: 0
 
 	initialize : ->
-		@set(beans : new Beans)
+
 		@set(view : new BeanView(model : @))
 
 		_.bindAll @,
@@ -168,15 +169,48 @@ class window.Bean extends Backbone.Model
 			'remove_child'
 			'add_hours_spent'
 
+		@on 'change:my_hours_spent',  =>
+
+			#updates my hours
+			total_hours = @get('my_hours_spent')
+			_.each @get('children').models, (child) =>
+				total_hours += child.get('hours_spent')
+			$(@get('view').el).find('.hrs_spent').text(total_hours)
+
+			#updates parents hours
+			parent = @get('parent')
+			if parent != null
+				parents_hours = 0
+				_.each parent.get('children').models, (child) =>
+					parents_hours += child.get('my_hours_spent')
+				parents_hours += parent.get('my_hours_spent')
+				parent.set('hours_spent' : parents_hours)
+				$(parent.get('view').el).find('.hrs_spent').text(parents_hours)
+
+		@on 'change:hours_spent',  =>
+
+			parent = @get('parent')
+			if parent != null
+
+				parents_hours = 0
+				_.each parent.get('children').models, (child) =>
+					parents_hours += child.get('hours_spent')
+				parents_hours += parent.get('my_hours_spent')
+				parent.set('hours_spent' : parents_hours)
+				$(parent.get('view').el).find('.hrs_spent').text(parents_hours)
+
+			$(@get('view').el).find('.hrs_spent').text(@get('hours_spent'))
+
 	add_child : (added_bean) ->
 		view = $(@get('view').el)
 
+		#TODO - this actually isn't working right yet
 		#unless view.next().hasClass('wrap')
-		view.find('.wrap').remove()
+		#view.parent().find('.wrap').remove()
 		view.after('<div class="wrap"></div>')
 		wrap = view.next()
 
-		_.each @get('beans').models, (bean) =>
+		_.each @get('children').models, (bean) =>
 			wrap.append(bean.get('view').render().el)
 			if added_bean == bean
 				bean.get('view').focus_me()
@@ -189,20 +223,22 @@ class window.Bean extends Backbone.Model
 			wrap.append(bean.get('view').render().el)
 
 	add_hours_spent : (to_add) ->
-		hours = @get('hours_spent')  + parseInt(to_add)
-		@set('hours_spent' : hours)
-		return hours
+		hours = @get('my_hours_spent')  + parseInt(to_add)
+		@set('my_hours_spent' : hours)
+
+)
 
 
+window.Beans = Backbone.Collection.extend(
 
-
-class window.Beans extends Backbone.Collection
 	initialize : ->
 		@on 'add', (bean) =>
 			bean_view 	= bean.get('view')
 			if @is_master == true
 				$('#cortado').find('.wrap').append(bean_view.render().el)
 			else
-				bean.get('parent').add_child(bean)
+				#TODO - this is a major design flaw. See Backbone relational documentation and fix at some point
+				setTimeout (=>  bean.get('parent').add_child(bean) ), 10
 
 			bean_view.focus_me()
+)

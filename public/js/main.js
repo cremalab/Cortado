@@ -1,5 +1,5 @@
 (function() {
-  var Project, ShortcutKeys, create_new_project,
+  var ShortcutKeys,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -35,15 +35,8 @@
 
   })(Backbone.Shortcuts);
 
-  Project = (function(_super) {
-
-    __extends(Project, _super);
-
-    function Project() {
-      Project.__super__.constructor.apply(this, arguments);
-    }
-
-    Project.prototype.initialize = function() {
+  window.Project = Backbone.RelationalModel.extend({
+    initialize: function() {
       var people,
         _this = this;
       this.set({
@@ -59,23 +52,20 @@
           });
         }
       });
-    };
-
-    return Project;
-
-  })(Backbone.Model);
-
-  create_new_project = function() {
-    var new_bean;
-    window.project = new Project;
-    new_bean = new Bean;
-    return project.get('beans').add(new_bean);
-  };
+    }
+  });
 
   $(function() {
-    var shortcuts;
+    var bean, bean2, shortcuts;
     shortcuts = new ShortcutKeys;
-    return create_new_project();
+    window.project = new Project;
+    bean = new Bean;
+    bean.set({
+      'content': 'Brand New Project'
+    });
+    project.get('beans').add(bean);
+    bean2 = new Bean;
+    return project.get('beans').models[0].get('children').add(bean2);
   });
 
 }).call(this);

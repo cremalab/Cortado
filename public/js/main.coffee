@@ -16,28 +16,32 @@ class ShortcutKeys extends Backbone.Shortcuts
 		e.preventDefault()
 
 
+window.Project = Backbone.RelationalModel.extend(
 
-class Project extends Backbone.Model
 	initialize : ->
+
 		@set('beans' : new Beans)
-		@get('beans').is_master = true 
+		@get('beans').is_master = true
 
 		people = new Backbone.Collection
 		people.url = '/data/people.json'
-		
 		people.fetch
 			success : =>
 				@set('people' : people)
+)
 
-
-
-create_new_project = ->
-
-	window.project 	= new Project
-	new_bean		= new Bean
-	project.get('beans').add(new_bean)
 
 
 $ ->
-	shortcuts = new ShortcutKeys
-	create_new_project()
+	shortcuts 		= new ShortcutKeys
+	window.project 	= new Project
+
+	#start a new project
+	bean = new Bean
+	bean.set('content' : 'Brand New Project')
+	project.get('beans').add bean
+
+
+	bean2 = new Bean
+	project.get('beans').models[0].get('children').add(bean2)
+	#

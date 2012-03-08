@@ -50,12 +50,12 @@
         current_char = parseInt(full_string.charAt(index -= 1));
       }
       if (isFinite(parseInt(string_num))) {
-        template = "<div class='hours'>" + string_num + " hours</div>";
+        template = "<div class='hours'>" + string_num + "</div>";
         delete_me = string_num + '#hrs';
         full_string = full_string.replace(delete_me, ' ');
         $(this.el).find('.textarea').text(full_string);
         $(this.el).find('.hour_wrap').append(template);
-        $(this.el).find('.hrs_spent').text(this.model.add_hours_spent(string_num));
+        this.model.add_hours_spent(string_num);
         return setTimeout((function() {
           return $(_this.el).find('.hours').addClass('show');
         }), 10);
@@ -90,41 +90,24 @@
     };
 
     BeanView.prototype.add_bean = function() {
-      var new_bean;
       this.save_content();
-      new_bean = new Bean;
-      new_bean.set({
-        'parent': this.model.get('parent')
-      });
-      return this.model.collection.add(new_bean);
+      return this.model.get('parent').get('children').add(new Bean);
     };
 
     BeanView.prototype.tab_over = function() {
-      var all_models, parent, this_index;
+      var current_parent, new_parent, this_index;
       if (this.model !== this.model.collection.models[0]) {
         this.save_content();
-        all_models = this.model.collection.models;
-        this_index = _.indexOf(all_models, this.model);
-        parent = all_models[this_index - 1];
-        this.model.collection.remove(this.model);
-        this.model.set({
-          'parent': parent
-        });
-        return parent.get('beans').add(this.model);
+        current_parent = this.model.get('parent').get('children');
+        this_index = _.indexOf(current_parent.models, this.model);
+        return new_parent = current_parent.models[this_index - 1].get('children').add(this.model);
       }
     };
 
     BeanView.prototype.tab_back = function() {
-      var double, single;
-      this.save_content();
-      if (this.model.get('parent') !== '') {
-        double = this.model.get('parent').get('parent');
-        single = this.model.get('parent');
-        this.model.get('parent').get('beans').remove(this.model);
-        this.model.set({
-          'parent': double
-        });
-        return single.collection.add(this.model);
+      if (this.model.get('parent')) {
+        this.save_content();
+        return this.model.get('parent').get('parent').get('children').add(this.model);
       }
     };
 
@@ -183,47 +166,83 @@
 
   })(Backbone.View);
 
-  window.Bean = (function(_super) {
-
-    __extends(Bean, _super);
-
-    function Bean() {
-      Bean.__super__.constructor.apply(this, arguments);
-    }
-
-    Bean.prototype.defaults = {
-      parent: '',
+  window.Bean = Backbone.RelationalModel.extend({
+    relations: [
+      {
+        type: Backbone.HasMany,
+        key: 'children',
+        relatedModel: 'Bean',
+        collectionType: 'Beans',
+        reverseRelation: {
+          key: 'parent',
+          type: Backbone.HasOne
+        }
+      }
+    ],
+    defaults: {
       content: '',
-      hours_estimated: 0,
+      my_hours_est: 0,
+      my_hours_spent: 0,
+      hours_est: 0,
       hours_spent: 0
-    };
-
-    Bean.prototype.initialize = function() {
-      this.set({
-        beans: new Beans
-      });
+    },
+    initialize: function() {
+      var _this = this;
       this.set({
         view: new BeanView({
           model: this
         })
       });
-      return _.bindAll(this, 'add_child', 'remove_child', 'add_hours_spent');
-    };
-
-    Bean.prototype.add_child = function(added_bean) {
+      _.bindAll(this, 'add_child', 'remove_child', 'add_hours_spent');
+      this.on('change:my_hours_spent', function() {
+        var parent, parents_hours, total_hours;
+        total_hours = _this.get('my_hours_spent');
+        _.each(_this.get('children').models, function(child) {
+          return total_hours += child.get('hours_spent');
+        });
+        $(_this.get('view').el).find('.hrs_spent').text(total_hours);
+        parent = _this.get('parent');
+        if (parent !== null) {
+          parents_hours = 0;
+          _.each(parent.get('children').models, function(child) {
+            return parents_hours += child.get('my_hours_spent');
+          });
+          parents_hours += parent.get('my_hours_spent');
+          parent.set({
+            'hours_spent': parents_hours
+          });
+          return $(parent.get('view').el).find('.hrs_spent').text(parents_hours);
+        }
+      });
+      return this.on('change:hours_spent', function() {
+        var parent, parents_hours;
+        parent = _this.get('parent');
+        if (parent !== null) {
+          parents_hours = 0;
+          _.each(parent.get('children').models, function(child) {
+            return parents_hours += child.get('hours_spent');
+          });
+          parents_hours += parent.get('my_hours_spent');
+          parent.set({
+            'hours_spent': parents_hours
+          });
+          $(parent.get('view').el).find('.hrs_spent').text(parents_hours);
+        }
+        return $(_this.get('view').el).find('.hrs_spent').text(_this.get('hours_spent'));
+      });
+    },
+    add_child: function(added_bean) {
       var view, wrap,
         _this = this;
       view = $(this.get('view').el);
-      view.find('.wrap').remove();
       view.after('<div class="wrap"></div>');
       wrap = view.next();
-      return _.each(this.get('beans').models, function(bean) {
+      return _.each(this.get('children').models, function(bean) {
         wrap.append(bean.get('view').render().el);
         if (added_bean === bean) return bean.get('view').focus_me();
       });
-    };
-
-    Bean.prototype.remove_child = function() {
+    },
+    remove_child: function() {
       var view, wrap,
         _this = this;
       view = $(this.get('view').el);
@@ -232,30 +251,18 @@
       return _.each(this.get('beans').models, function(bean) {
         return wrap.append(bean.get('view').render().el);
       });
-    };
-
-    Bean.prototype.add_hours_spent = function(to_add) {
+    },
+    add_hours_spent: function(to_add) {
       var hours;
-      hours = this.get('hours_spent') + parseInt(to_add);
-      this.set({
-        'hours_spent': hours
+      hours = this.get('my_hours_spent') + parseInt(to_add);
+      return this.set({
+        'my_hours_spent': hours
       });
-      return hours;
-    };
-
-    return Bean;
-
-  })(Backbone.Model);
-
-  window.Beans = (function(_super) {
-
-    __extends(Beans, _super);
-
-    function Beans() {
-      Beans.__super__.constructor.apply(this, arguments);
     }
+  });
 
-    Beans.prototype.initialize = function() {
+  window.Beans = Backbone.Collection.extend({
+    initialize: function() {
       var _this = this;
       return this.on('add', function(bean) {
         var bean_view;
@@ -263,14 +270,13 @@
         if (_this.is_master === true) {
           $('#cortado').find('.wrap').append(bean_view.render().el);
         } else {
-          bean.get('parent').add_child(bean);
+          setTimeout((function() {
+            return bean.get('parent').add_child(bean);
+          }), 10);
         }
         return bean_view.focus_me();
       });
-    };
-
-    return Beans;
-
-  })(Backbone.Collection);
+    }
+  });
 
 }).call(this);

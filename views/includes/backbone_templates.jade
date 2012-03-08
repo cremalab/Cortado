@@ -3,15 +3,16 @@ script#bean(type='text/template')
 	.stats
 		div.hrs
 			div.hrs_spent <%= hours_spent %>
-			div.hrs_total <%= hours_estimated %>
+			div.hrs_total <%= hours_est %>
 		div.date_weight
 			div.date 0
 			div.weight 0
 
-	textarea.textarea
+	div.textarea('contenteditable'=true)
 		<%= content %>
 
 	.hour_wrap
+		div.hours.show <%= my_hours_spent %>
 
 script#stats(type='text/template')
 
