@@ -316,11 +316,10 @@ section#document header {
   margin-bottom: 30px;
   padding: 1px 0;
   border-bottom: 2px dotted #b4deeb;
+  overflow: hidden;
 }
 section#document header ul {
-  padding-left: 0;
   overflow: hidden;
-  list-style-type: none;
 }
 section#document header li {
   float: left;
@@ -335,6 +334,7 @@ section#document header li:last-child:after {
 section#document a#save {
   display: inline-block;
   float: right;
+  margin-bottom: 10px;
   padding: 5px;
   border: 1px solid #c60;
   border-radius: 3px;
@@ -342,17 +342,9 @@ section#document a#save {
   color: #000;
   text-decoration: none;
 }
-.wrap {
-  margin-left: 40px;
+#cortado .wrap {
   position: relative;
-}
-.wrap .handle {
-  background-color: $lava;
-  height: 10px;
-  width: 10px;
-  position: absolute;
-  left: 0;
-  top: 0;
+  margin-left: 40px;
 }
 .bean {
   -webkit-transform: translateY(-3px);

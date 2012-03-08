@@ -9,6 +9,8 @@ class BeanView extends Backbone.View
 		_.bindAll @,
 			'focus_me'
 			'add_user'
+			'change_hours_spent'
+			'update_hours_spent'
 
 
 	handle_keys : (e) ->
@@ -23,7 +25,7 @@ class BeanView extends Backbone.View
 			else @key_record(e.keyCode, e.shiftKey)
 
 
-	add_hours_spent : ->
+	change_hours_spent : ->
 		full_string 		= $(@el).find('.textarea').text()
 		index		= full_string.search('#hrs') - 1
 		current_char	= parseInt(full_string.charAt(index))
@@ -42,17 +44,23 @@ class BeanView extends Backbone.View
 			$(@el).find('.textarea').text(full_string)
 			$(@el).find('.hour_wrap').append(template)
 
-			@model.add_hours_spent(string_num)
-
 			#TODO - would be neat to have this more of a utility function. hate this syntax...
 			setTimeout (=> $(@el).find('.hours').addClass('show') ), 10
 
+			hours = @model.get('my_hours_spent')  + parseInt(string_num)
+			@model.set('my_hours_spent' : hours)
 
-	add_hours_estimated : ->
-		console.log 'est'
 
+	change_hours_estimated : ->
+
+
+	update_hours_spent : (hrs) ->
+		$(@el).find('.hrs_spent').text(hrs)
+	update_hours_estimated : (hrs) ->
+		$(@el).find('.hrs_total').text(hrs)
 
 	add_user : (user) ->
+		#TODO - this actually needs 
 		wrap 		= $(@el).find('.people')
 		name		= user.get('name')
 		img_path	= user.get('img_path')
@@ -81,10 +89,10 @@ class BeanView extends Backbone.View
 			@last_four_keys.pop()
 
 		if _.isEqual(@last_four_keys, [83, 82, 72, 51])
-			@add_hours_spent()
+			@change_hours_spent()
 
 		else if _.isEqual(@last_four_keys, [84, 83, 69, 51])
-			@add_hours_estimated()
+			@change_hours_estimated()
 			
 
 	add_bean : ->
@@ -167,6 +175,8 @@ window.Bean = Backbone.RelationalModel.extend(
 	
 	defaults :
 		content 		: ''
+		people 		: []
+		keywords 		: []
 		my_hours_est 	: 0
 		my_hours_spent	: 0
 		hours_est 		: 0
@@ -177,44 +187,42 @@ window.Bean = Backbone.RelationalModel.extend(
 		@set(view : new BeanView(model : @))
 
 		_.bindAll @,
-			'add_child'
-			'remove_child'
-			'add_hours_spent'
+			'add_bean'
+			'remove_bean'
 			'add_user'
+			'update_hours_spent'
+			'update_hours_estimated'
 
 		@on 'change:my_hours_spent',  =>
-
-			#updates my hours
-			total_hours = @get('my_hours_spent')
-			_.each @get('children').models, (child) =>
-				total_hours += child.get('hours_spent')
-			$(@get('view').el).find('.hrs_spent').text(total_hours)
-
-			#updates parents hours
-			parent = @get('parent')
-			if parent != null
-				parents_hours = 0
-				_.each parent.get('children').models, (child) =>
-					parents_hours += child.get('my_hours_spent')
-				parents_hours += parent.get('my_hours_spent')
-				parent.set('hours_spent' : parents_hours)
-				$(parent.get('view').el).find('.hrs_spent').text(parents_hours)
-
-		@on 'change:hours_spent',  =>
+			if !@get('children').models.length
+				@set('hours_spent' : @get('my_hours_spent'))
 
 			parent = @get('parent')
 			if parent != null
+				parent.update_hours_spent()
+			else
+				@update_hours_spent()
 
-				parents_hours = 0
-				_.each parent.get('children').models, (child) =>
-					parents_hours += child.get('hours_spent')
-				parents_hours += parent.get('my_hours_spent')
-				parent.set('hours_spent' : parents_hours)
-				$(parent.get('view').el).find('.hrs_spent').text(parents_hours)
+		@on 'change:hours_spent', =>
+			@get('view').update_hours_spent(@get('hours_spent'))
+			parent = @get('parent')
+			if parent != null then parent.update_hours_spent()
 
-			$(@get('view').el).find('.hrs_spent').text(@get('hours_spent'))
 
-	add_child : (added_bean) ->
+	update_hours_spent : ->
+		new_hours = @get('my_hours_spent')
+		_.each @get('children').models, (child) ->
+			if child.get('children').models.length
+				new_hours += child.get('hours_spent')
+			else
+				new_hours += child.get('my_hours_spent')
+
+		@set('hours_spent' : new_hours)
+
+	update_hours_estimated : ->
+
+
+	add_bean : (added_bean) ->
 		view = $(@get('view').el)
 
 		#TODO - this actually isn't working right yet
@@ -226,22 +234,17 @@ window.Bean = Backbone.RelationalModel.extend(
 			if added_bean == bean
 				bean.get('view').focus_me()
 
-	add_user : (uid) ->
-		uid	= parseInt(uid)
-		_.each project.get('people').models, (person) =>
-			if person.get('uid') == uid  then @get('view').add_user(person)
-
-	remove_child : ->
+	remove_bean : ->
 		view = $(@get('view').el)
 		wrap = view.next()
 		wrap.empty()
 		_.each @get('beans').models, (bean) =>
 			wrap.append(bean.get('view').render().el)
 
-	add_hours_spent : (to_add) ->
-		hours = @get('my_hours_spent')  + parseInt(to_add)
-		@set('my_hours_spent' : hours)
-
+	add_user : (uid) ->
+		uid	= parseInt(uid)
+		_.each project.get('people').models, (person) =>
+			if person.get('uid') == uid  then @get('view').add_user(person)
 )
 
 
@@ -254,7 +257,7 @@ window.Beans = Backbone.Collection.extend(
 				$('#cortado').find('.wrap').append(bean_view.render().el)
 			else
 				#TODO - this is a major design flaw. See Backbone relational documentation and fix at some point
-				setTimeout (=>  bean.get('parent').add_child(bean) ), 10
+				setTimeout (=>  bean.get('parent').add_bean(bean) ), 10
 
 			bean_view.focus_me()
 )

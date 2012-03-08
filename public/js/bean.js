@@ -19,7 +19,7 @@
 
     BeanView.prototype.initialize = function() {
       this.last_four_keys = [];
-      return _.bindAll(this, 'focus_me', 'add_user');
+      return _.bindAll(this, 'focus_me', 'add_user', 'change_hours_spent', 'update_hours_spent');
     };
 
     BeanView.prototype.handle_keys = function(e) {
@@ -40,8 +40,8 @@
       }
     };
 
-    BeanView.prototype.add_hours_spent = function() {
-      var current_char, delete_me, full_string, index, string_num, template,
+    BeanView.prototype.change_hours_spent = function() {
+      var current_char, delete_me, full_string, hours, index, string_num, template,
         _this = this;
       full_string = $(this.el).find('.textarea').text();
       index = full_string.search('#hrs') - 1;
@@ -57,15 +57,24 @@
         full_string = full_string.replace(delete_me, ' ');
         $(this.el).find('.textarea').text(full_string);
         $(this.el).find('.hour_wrap').append(template);
-        this.model.add_hours_spent(string_num);
-        return setTimeout((function() {
+        setTimeout((function() {
           return $(_this.el).find('.hours').addClass('show');
         }), 10);
+        hours = this.model.get('my_hours_spent') + parseInt(string_num);
+        return this.model.set({
+          'my_hours_spent': hours
+        });
       }
     };
 
-    BeanView.prototype.add_hours_estimated = function() {
-      return console.log('est');
+    BeanView.prototype.change_hours_estimated = function() {};
+
+    BeanView.prototype.update_hours_spent = function(hrs) {
+      return $(this.el).find('.hrs_spent').text(hrs);
+    };
+
+    BeanView.prototype.update_hours_estimated = function(hrs) {
+      return $(this.el).find('.hrs_total').text(hrs);
     };
 
     BeanView.prototype.add_user = function(user) {
@@ -99,9 +108,9 @@
       this.last_four_keys.unshift(code);
       if (this.last_four_keys.length > 4) this.last_four_keys.pop();
       if (_.isEqual(this.last_four_keys, [83, 82, 72, 51])) {
-        return this.add_hours_spent();
+        return this.change_hours_spent();
       } else if (_.isEqual(this.last_four_keys, [84, 83, 69, 51])) {
-        return this.add_hours_estimated();
+        return this.change_hours_estimated();
       }
     };
 
@@ -197,6 +206,8 @@
     ],
     defaults: {
       content: '',
+      people: [],
+      keywords: [],
       my_hours_est: 0,
       my_hours_spent: 0,
       hours_est: 0,
@@ -209,45 +220,44 @@
           model: this
         })
       });
-      _.bindAll(this, 'add_child', 'remove_child', 'add_hours_spent', 'add_user');
+      _.bindAll(this, 'add_bean', 'remove_bean', 'add_user', 'update_hours_spent', 'update_hours_estimated');
       this.on('change:my_hours_spent', function() {
-        var parent, parents_hours, total_hours;
-        total_hours = _this.get('my_hours_spent');
-        _.each(_this.get('children').models, function(child) {
-          return total_hours += child.get('hours_spent');
-        });
-        $(_this.get('view').el).find('.hrs_spent').text(total_hours);
+        var parent;
+        if (!_this.get('children').models.length) {
+          _this.set({
+            'hours_spent': _this.get('my_hours_spent')
+          });
+        }
         parent = _this.get('parent');
         if (parent !== null) {
-          parents_hours = 0;
-          _.each(parent.get('children').models, function(child) {
-            return parents_hours += child.get('my_hours_spent');
-          });
-          parents_hours += parent.get('my_hours_spent');
-          parent.set({
-            'hours_spent': parents_hours
-          });
-          return $(parent.get('view').el).find('.hrs_spent').text(parents_hours);
+          return parent.update_hours_spent();
+        } else {
+          return _this.update_hours_spent();
         }
       });
       return this.on('change:hours_spent', function() {
-        var parent, parents_hours;
+        var parent;
+        _this.get('view').update_hours_spent(_this.get('hours_spent'));
         parent = _this.get('parent');
-        if (parent !== null) {
-          parents_hours = 0;
-          _.each(parent.get('children').models, function(child) {
-            return parents_hours += child.get('hours_spent');
-          });
-          parents_hours += parent.get('my_hours_spent');
-          parent.set({
-            'hours_spent': parents_hours
-          });
-          $(parent.get('view').el).find('.hrs_spent').text(parents_hours);
-        }
-        return $(_this.get('view').el).find('.hrs_spent').text(_this.get('hours_spent'));
+        if (parent !== null) return parent.update_hours_spent();
       });
     },
-    add_child: function(added_bean) {
+    update_hours_spent: function() {
+      var new_hours;
+      new_hours = this.get('my_hours_spent');
+      _.each(this.get('children').models, function(child) {
+        if (child.get('children').models.length) {
+          return new_hours += child.get('hours_spent');
+        } else {
+          return new_hours += child.get('my_hours_spent');
+        }
+      });
+      return this.set({
+        'hours_spent': new_hours
+      });
+    },
+    update_hours_estimated: function() {},
+    add_bean: function(added_bean) {
       var view, wrap,
         _this = this;
       view = $(this.get('view').el);
@@ -258,14 +268,7 @@
         if (added_bean === bean) return bean.get('view').focus_me();
       });
     },
-    add_user: function(uid) {
-      var _this = this;
-      uid = parseInt(uid);
-      return _.each(project.get('people').models, function(person) {
-        if (person.get('uid') === uid) return _this.get('view').add_user(person);
-      });
-    },
-    remove_child: function() {
+    remove_bean: function() {
       var view, wrap,
         _this = this;
       view = $(this.get('view').el);
@@ -275,11 +278,11 @@
         return wrap.append(bean.get('view').render().el);
       });
     },
-    add_hours_spent: function(to_add) {
-      var hours;
-      hours = this.get('my_hours_spent') + parseInt(to_add);
-      return this.set({
-        'my_hours_spent': hours
+    add_user: function(uid) {
+      var _this = this;
+      uid = parseInt(uid);
+      return _.each(project.get('people').models, function(person) {
+        if (person.get('uid') === uid) return _this.get('view').add_user(person);
       });
     }
   });
@@ -294,7 +297,7 @@
           $('#cortado').find('.wrap').append(bean_view.render().el);
         } else {
           setTimeout((function() {
-            return bean.get('parent').add_child(bean);
+            return bean.get('parent').add_bean(bean);
           }), 10);
         }
         return bean_view.focus_me();
