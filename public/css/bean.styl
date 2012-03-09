@@ -10,42 +10,41 @@
 	z-index 				1
 	position				relative
 	opacity 				.25
-	width 				100%
-	height 				20px
+	width 					100%
 	padding-left 			30px
-	background 			url(../img/app/reorder.png) no-repeat center left
-	font-size 				15px
+	margin-bottom			$vMargin
+	background 				url(../img/app/reorder.png) no-repeat left .245rem
+
 
 	.textarea
 		display 			inline-block
-		width 			500px
-		margin-bottom  		7px
-		font-size 			15px
-		border 			none
+		width 				500px
+		border 				none
 		outline 			none
 
 	.stats, .people, .hour_wrap
 		display 			none
 	.hour_wrap
-		margin-bottom 		5px
+		margin-top			.33*$vMargin
+		margin-bottom		$vMargin
 
 	.hours
 		-webkit-transform 	translateY(-25px)
-		-webkit-transition all .1s ease-out
+		-webkit-transition 	all .1s ease-out
 		display 			inline-block
-		opacity			.25
+		opacity				.25
 		margin-right		5px
 		padding 			2px 5px 2px 2px
-		border 			1px solid $seafoam_dk
+		border 				1px solid $seafoam_dk
 		border-radius		3px
 		background-color	$seafoam
 		font-size			80%
 		font-style 			italic
 	.hours:after
-		content	 		' hours'
+		content	 			' hours'
 	.hours.show
 		-webkit-transform 	translateY(0px)
-		opacity			1
+		opacity				1
 
 	// ---- People Region ---- //
 	.people
@@ -56,12 +55,12 @@
 			margin-left 	10px
 	.user
 		-webkit-transform 	translateY(-25px)
-		-webkit-transition all .1s ease-out
-		opacity			.25
+		-webkit-transition 	all .1s ease-out
+		opacity				.25
 		border-radius		40px
 	.user.show
 		-webkit-transform 	translateY(0px)
-		opacity			1
+		opacity				1
 	// ---- User Photos ---- //
 	
 
@@ -76,26 +75,30 @@
 		.date
 			float 			left
 			margin-right	10px
-			color 		$grass
+			color 			$grass
 		.weight 
-			color 		$magma
+			color 			$magma
 		.hrs
 			margin-bottom	4px
 			overflow		hidden
 		.hrs_spent
 			float 			left
 			margin-right 	10px
-			color 		$mustard
+			color 			$mustard
 		.hrs_spent:after
 			content 		'hrs'
 		.hrs_total
-			color 		$ocean
+			color 			$ocean
 		.hrs_total:before
-			content		'/'
+			content			'/'
 		.hrs_total:after
-			content		'hrs'
+			content			'hrs'
 	// ---- Stats ---- //
-	
+
+.bean:hover
+	-webkit-transform 		translateY(-3px)
+	-webkit-transition		all .25s ease-out
+	opacity 				.75
 
 .bean.focus
 	-webkit-transform 		translateY(0px)
