@@ -1,11 +1,11 @@
 # Cortado (Temporary Codename)
 
 ## SetUp
-To get started you'll need [node](http://nodejs.org), and [npm](http://npmjs.org/)
+To get started you'll need [node](http://nodejs.org). After the download and install of node is complete, install [npm](http://npmjs.org/). The one line install is sufficient.
 
 ### NPM
-Install all packages
-`npm install`
+* Install all packages `npm install`
+* Install node-dev globally 'npm install node-dev -g'
 
 ### Running
 Run the server with node-dev
