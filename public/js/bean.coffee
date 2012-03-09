@@ -8,7 +8,7 @@ TODO
 class BeanView extends Backbone.View
 	className : 'bean'
 	events :
-		'keyup'	: 'handle_keys'
+		'keydown'	: 'handle_keys'
 		'click'		: 'handle_focus'
 
 

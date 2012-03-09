@@ -21,7 +21,7 @@ TODO
     BeanView.prototype.className = 'bean';
 
     BeanView.prototype.events = {
-      'keyup': 'handle_keys',
+      'keydown': 'handle_keys',
       'click': 'handle_focus'
     };
 
