@@ -264,6 +264,9 @@ a:link {
     page-break-after: avoid;
   }
 }
+body {
+  font: 16px/1.25rem sans-serif;
+}
 div.user_photo {
   width: 40px;
   height: 40px;
@@ -353,16 +356,13 @@ section#document a#save {
   position: relative;
   opacity: 0.25;
   width: 100%;
-  height: 20px;
   padding-left: 30px;
-  background: url("../img/app/reorder.png") no-repeat center left;
-  font-size: 15px;
+  margin-bottom: 1.5rem;
+  background: url("../img/app/reorder.png") no-repeat left 0.245rem;
 }
 .bean .textarea {
   display: inline-block;
   width: 500px;
-  margin-bottom: 7px;
-  font-size: 15px;
   border: none;
   outline: none;
 }
@@ -372,7 +372,8 @@ section#document a#save {
   display: none;
 }
 .bean .hour_wrap {
-  margin-bottom: 5px;
+  margin-top: 0.495rem;
+  margin-bottom: 1.5rem;
 }
 .bean .hours {
   -webkit-transform: translateY(-25px);
@@ -449,6 +450,11 @@ section#document a#save {
 }
 .bean .stats .hrs_total:after {
   content: 'hrs';
+}
+.bean:hover {
+  -webkit-transform: translateY(-3px);
+  -webkit-transition: all 0.25s ease-out;
+  opacity: 0.75;
 }
 .bean.focus {
   -webkit-transform: translateY(0px);
