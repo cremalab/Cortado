@@ -1,3 +1,10 @@
+
+/*
+TODO
+* update hours on tab in and tab out
+* get up and down arrows working properly
+*/
+
 (function() {
   var BeanView,
     __hasProp = Object.prototype.hasOwnProperty,
@@ -14,12 +21,17 @@
     BeanView.prototype.className = 'bean';
 
     BeanView.prototype.events = {
-      'keyup': 'handle_keys'
+      'keyup': 'handle_keys',
+      'click': 'handle_focus'
     };
 
     BeanView.prototype.initialize = function() {
       this.last_four_keys = [];
-      return _.bindAll(this, 'focus_me', 'add_user', 'append_child_bean', 'change_hours_spent', 'update_hours_spent');
+      return _.bindAll(this, 'focus_me', 'add_user', 'append_child_bean', 'update_hours_spent');
+    };
+
+    BeanView.prototype.handle_focus = function() {
+      return this.focus_me();
     };
 
     BeanView.prototype.handle_keys = function(e) {
@@ -27,7 +39,11 @@
         if (e.keyCode === 13) {
           if ($(this.el).find('.textarea').text().length > 1) {
             this.save_content();
-            return this.model.get('parent').get('children').add(new Bean);
+            if (this.model.get('parent') !== null) {
+              return this.model.get('parent').get('children').add(new Bean);
+            } else {
+              return this.model.get('children').add(new Bean);
+            }
           }
         } else if (e.keyCode === 9 && e.shiftKey === true) {
           return this.tab_back($(this.el));
@@ -129,50 +145,62 @@
 
     BeanView.prototype.tab_over = function() {
       var current_parent, new_parent, this_index;
-      if (this.model !== this.model.collection.models[0]) {
-        this.save_content();
-        current_parent = this.model.get('parent').get('children');
-        this_index = _.indexOf(current_parent.models, this.model);
-        return new_parent = current_parent.models[this_index - 1].get('children').add(this.model);
+      if (this.model.collection !== null) {
+        if (this.model !== this.model.collection.models[0]) {
+          this.save_content();
+          current_parent = this.model.get('parent').get('children');
+          this_index = _.indexOf(current_parent.models, this.model);
+          return new_parent = current_parent.models[this_index - 1].get('children').add(this.model);
+        }
       }
     };
 
     BeanView.prototype.tab_back = function() {
-      if (this.model.get('parent')) {
+      var wrap,
+        _this = this;
+      if (this.model.get('parent').get('parent') !== null) {
         this.save_content();
+        if ($(this.el).parent().children().length === 1) {
+          wrap = $(this.el).parent();
+          setTimeout((function() {
+            return wrap.remove();
+          }), 1000);
+        }
         return this.model.get('parent').get('parent').get('children').add(this.model);
       }
     };
 
     BeanView.prototype.go_up = function() {
-      if ($(this.el).prev().hasClass('bean')) {
-        return this.focus_me($(this.el).prev());
-      } else if ($(this.el).prev().hasClass('wrap')) {
-        return this.focus_me($(this.el).prev().children('.bean:last'));
-      } else if ($(this.el).parent().prev().hasClass('bean')) {
-        return this.focus_me($(this.el).parent().prev());
-      } else if ($(this.el).parent().prev().hasClass('wrap')) {
-        return this.focus_me($(this.el).parent().prev().children('.bean:last'));
+      if ($(this.el).prev('.bean').length) {
+        return this.focus_me($(this.el).prev('.bean'));
+      } else if ($(this.el).prev().prev('.bean').length) {
+        return this.focus_me($(this.el).prev().prev('.bean'));
+      } else if ($(this.el).parent().hasClass('wrap')) {
+        return this.focus_me($(this.el).parent().prev('.bean'));
       } else {
         return false;
       }
     };
 
     BeanView.prototype.go_down = function() {
-      var parent;
+      var el, re_focus;
       if ($(this.el).next().hasClass('bean')) {
         return this.focus_me($(this.el).next());
       } else if ($(this.el).next().hasClass('wrap')) {
         return this.focus_me($(this.el).next().children('.bean:first'));
       } else {
-        parent = $(this.el).parent();
-        while (!(parent.next().hasClass('bean')) || !(parent.next().hasClass('wrap'))) {
-          if (parent.attr('id') === 'cortado') break;
-          parent = parent.parent();
+        el = $(this.el).parent();
+        re_focus = true;
+        while (!(el.next('.bean')).length) {
+          if (el.attr('id') === 'cortado') {
+            re_focus = false;
+            break;
+          } else {
+            el = el.parent();
+            re_focus = true;
+          }
         }
-        if (parent.attr('id') !== 'cortado') {
-          return this.focus_me(parent.next().children('.bean:first'));
-        }
+        if (re_focus) return this.focus_me(el.next());
       }
     };
 
@@ -291,7 +319,7 @@
         var bean_view;
         bean_view = bean.get('view');
         if (_this.is_master === true) {
-          $('#cortado').find('.wrap').append(bean_view.render().el);
+          $('#cortado').append(bean_view.render().el);
         } else {
           setTimeout((function() {
             return bean.get('parent').get('view').append_child_bean(bean);

@@ -1,7 +1,15 @@
+###
+TODO
+* update hours on tab in and tab out
+* get up and down arrows working properly
+###
+
+
 class BeanView extends Backbone.View
 	className : 'bean'
 	events :
-		'keyup': 'handle_keys'
+		'keyup'	: 'handle_keys'
+		'click'		: 'handle_focus'
 
 
 	initialize : ->
@@ -10,8 +18,13 @@ class BeanView extends Backbone.View
 			'focus_me'
 			'add_user'
 			'append_child_bean'
-			'change_hours_spent'
 			'update_hours_spent'
+
+	handle_focus : ->
+		#TODO - this is stupid. By default backbone passes the event
+		# as the first parameter. This will just strip out the param and 
+		# pass it to the next function
+		@focus_me()
 
 
 	handle_keys : (e) ->
@@ -19,7 +32,10 @@ class BeanView extends Backbone.View
 			if e.keyCode == 13
 				if $(@el).find('.textarea').text().length > 1
 					@save_content()
-					@model.get('parent').get('children').add(new Bean)
+					if @model.get('parent') != null
+						@model.get('parent').get('children').add(new Bean)
+					else
+						@model.get('children').add(new Bean)
 			else if e.keyCode == 9 && e.shiftKey == true
 				@tab_back($(@el))
 			else if e.keyCode == 9 then @tab_over()
@@ -99,7 +115,6 @@ class BeanView extends Backbone.View
 
 
 	append_child_bean : (bean) ->
-
 		unless $(@el).next().hasClass('wrap')
 			$(@el).after('<div class="wrap"></div>')
 		
@@ -108,49 +123,48 @@ class BeanView extends Backbone.View
 		$(new_bean).find('.textarea').focus()
 
 	tab_over : ->
-		if @model != @model.collection.models[0] 
-			@save_content()
-			current_parent	= @model.get('parent').get('children')
-			this_index	 	= _.indexOf(current_parent.models, @model)
-			new_parent 	= current_parent.models[this_index - 1].get('children').add(@model)
+		if @model.collection != null
+			if @model != @model.collection.models[0] 
+				@save_content()
+				current_parent	= @model.get('parent').get('children')
+				this_index	 	= _.indexOf(current_parent.models, @model)
+				new_parent 	= current_parent.models[this_index - 1].get('children').add(@model)
 
 	tab_back : ->
-		if @model.get('parent')
+		if @model.get('parent').get('parent') != null
 			@save_content()
+			if $(@el).parent().children().length == 1
+				wrap = $(@el).parent()
+				setTimeout (=> wrap.remove() ), 1000
 			@model.get('parent').get('parent').get('children').add(@model)
 
 
 	go_up : ->
-		if $(@el).prev().hasClass('bean')
-			@focus_me($(@el).prev())
-
-		else if $(@el).prev().hasClass('wrap')
-			#TODO - this should probably be more complicated
-			@focus_me($(@el).prev().children('.bean:last'))
-
-		else if $(@el).parent().prev().hasClass('bean')
-			@focus_me($(@el).parent().prev())
-		
-		else if $(@el).parent().prev().hasClass('wrap')
-			@focus_me($(@el).parent().prev().children('.bean:last'))
-
+		if $(@el).prev('.bean').length 
+			@focus_me($(@el).prev('.bean'))
+		else if $(@el).prev().prev('.bean').length
+			@focus_me($(@el).prev().prev('.bean'))
+		else if $(@el).parent().hasClass('wrap')
+			@focus_me($(@el).parent().prev('.bean'))
 		else return false
 
 	go_down : ->
-		if $(@el).next().hasClass('bean')
-			@focus_me($(@el).next())
-
-		else if $(@el).next().hasClass('wrap')
-			@focus_me($(@el).next().children('.bean:first'))
+		if $(@el).next().hasClass('bean') then @focus_me($(@el).next())
+		else if $(@el).next().hasClass('wrap') then @focus_me($(@el).next().children('.bean:first'))
 
 		else
-			parent = $(@el).parent()
-			while (!(parent.next().hasClass('bean')) || !(parent.next().hasClass('wrap')))
-				if parent.attr('id') == 'cortado' then break
-				parent = parent.parent()
-			
-			if parent.attr('id') != 'cortado' 
-				@focus_me(parent.next().children('.bean:first'))
+			el = $(@el).parent()
+			re_focus = true
+			while (!(el.next('.bean')).length)
+				if el.attr('id') == 'cortado' 
+					re_focus = false
+					break
+				else 
+					el = el.parent()
+					re_focus = true
+
+			if re_focus 
+				@focus_me(el.next())
 
 	save_content : ->
 		@model.set(content : $(@el).find('.textarea').text())
@@ -249,7 +263,7 @@ window.Beans = Backbone.Collection.extend(
 		@on 'add', (bean) =>
 			bean_view 	= bean.get('view')
 			if @is_master == true
-				$('#cortado').find('.wrap').append(bean_view.render().el)
+				$('#cortado').append(bean_view.render().el)
 			else
 				#TODO - this is a major design flaw. See Backbone relational documentation and fix at some point
 				setTimeout (=>  bean.get('parent').get('view').append_child_bean(bean) ), 10
