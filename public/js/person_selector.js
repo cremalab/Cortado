@@ -39,13 +39,20 @@
         _this = this;
       input_text = this.input.val();
       return $.each($(this.el).find('li'), function(i, item) {
-        var name;
+        var name, selected;
         name = $(item).find('.name').text();
         if (!_this.string_is_part_of_string(input_text, name)) {
-          return $(item).hide();
+          $(item).hide();
         } else {
-          return $(item).show();
+          $(item).show();
         }
+        _this.get_selected().removeClass('selected');
+        selected = $(_this.el).find('li:first-child');
+        i = 0;
+        while (selected.is(':hidden') && i < 10) {
+          selected = selected.next();
+        }
+        return selected.addClass('selected');
       });
     };
 
@@ -71,23 +78,37 @@
     };
 
     PersonSelector.prototype.go_up = function() {
-      var selected;
-      selected = this.get_selected();
-      if (selected.prev().length) {
-        return selected.removeClass('selected').prev().addClass('selected');
-      } else {
-        return selected.removeClass('selected').parent().find('li:last-child').addClass('selected');
+      var i, next_item, selected;
+      selected = this.get_selected().removeClass('selected');
+      next_item = selected.prev();
+      if (!next_item.length) next_item = selected.parent().find('li:last-child');
+      i = 0;
+      while (next_item.is(':hidden') && i < 10) {
+        if (!next_item.prev().length) {
+          next_item = selected.parent().find('li:last-child').addClass('selected');
+        } else {
+          next_item = next_item.prev();
+        }
+        i++;
       }
+      return next_item.addClass('selected');
     };
 
     PersonSelector.prototype.go_down = function() {
-      var selected;
-      selected = this.get_selected();
-      if (selected.next().length) {
-        return selected.removeClass('selected').next().addClass('selected');
-      } else {
-        return selected.removeClass('selected').parent().find('li:first-child').addClass('selected');
+      var i, next_item, selected;
+      selected = this.get_selected().removeClass('selected');
+      next_item = selected.next();
+      if (!next_item.length) next_item = selected.parent().find('li:first-child');
+      i = 0;
+      while (next_item.is(':hidden') && i < 10) {
+        if (!next_item.next().length) {
+          next_item = selected.parent().find('li:first-child').addClass('selected');
+        } else {
+          next_item = next_item.next();
+        }
+        i++;
       }
+      return next_item.addClass('selected');
     };
 
     PersonSelector.prototype.get_selected = function() {

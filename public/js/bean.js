@@ -2,7 +2,7 @@
 /*
 TODO
 * update hours on tab in and tab out
-* get up and down arrows working properly
+* populate users to parents
 */
 
 (function() {
@@ -145,7 +145,7 @@ TODO
 
     BeanView.prototype.tab_over = function() {
       var current_parent, new_parent, this_index;
-      if (this.model.collection !== null) {
+      if (this.model.collection) {
         if (this.model !== this.model.collection.models[0]) {
           this.save_content();
           current_parent = this.model.get('parent').get('children');

@@ -1,7 +1,7 @@
 ###
 TODO
 * update hours on tab in and tab out
-* get up and down arrows working properly
+* populate users to parents
 ###
 
 
@@ -122,7 +122,7 @@ class BeanView extends Backbone.View
 		setTimeout (=> $(@el).find('.user').addClass('show') ), 10
 
 	tab_over : ->
-		if @model.collection != null
+		if @model.collection
 			if @model != @model.collection.models[0] 
 				@save_content()
 				current_parent	= @model.get('parent').get('children')

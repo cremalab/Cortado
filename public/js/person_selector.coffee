@@ -22,6 +22,15 @@ class window.PersonSelector extends Backbone.View
 			else
 				$(item).show()
 
+			#TODO - just make this better
+			@get_selected().removeClass('selected')
+			selected = $(@el).find('li:first-child')
+			i = 0
+			while selected.is(':hidden') && i<10
+				selected = selected.next()
+			selected.addClass('selected')
+
+
 	add_me : ->
 		this_guy = parseInt(@get_selected().find('.uid').text())
 		_.each project.get('people').models, (person) =>
@@ -36,18 +45,36 @@ class window.PersonSelector extends Backbone.View
 		), 500
 
 	go_up : ->
-		selected = @get_selected()
-		if selected.prev().length
-			selected.removeClass('selected').prev().addClass('selected')
-		else
-			selected.removeClass('selected').parent().find('li:last-child').addClass('selected')
+		#TODO - just make this better
+		selected 	= @get_selected().removeClass('selected')
+		next_item	= selected.prev()
+		if !next_item.length then next_item = selected.parent().find('li:last-child')
+		
+		i = 0
+		while next_item.is(':hidden') && i<10
+			if !next_item.prev().length
+				next_item = selected.parent().find('li:last-child').addClass('selected')
+			else
+				next_item = next_item.prev()
+			i++
+
+		next_item.addClass('selected')
 
 	go_down : ->
-		selected = @get_selected()
-		if selected.next().length
-			selected.removeClass('selected').next().addClass('selected')
-		else
-			selected.removeClass('selected').parent().find('li:first-child').addClass('selected')
+		#TODO - just make this better
+		selected 	= @get_selected().removeClass('selected')
+		next_item	= selected.next()
+		if !next_item.length then next_item = selected.parent().find('li:first-child')
+
+		i = 0
+		while next_item.is(':hidden') && i<10
+			if !next_item.next().length
+				next_item = selected.parent().find('li:first-child').addClass('selected')
+			else
+				next_item = next_item.next()
+			i++
+
+		next_item.addClass('selected')
 
 	get_selected : ->
 		$(@el).find('ul').find('li.selected')
