@@ -8,6 +8,7 @@
       "stylus"          : "v0.22.5",
       "socket.io"       : "0.9.0",
       "passport"        : "0.1.6",
-      "passport-local"  : "0.1.0"
+      "passport-local"  : "0.1.0",
+      "socket.io" : "0.9.0 "
    }
 }
