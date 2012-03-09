@@ -29,23 +29,26 @@ class BeanView extends Backbone.View
 
 	handle_keys : (e) ->
 		if !@person_selector
-			if e.keyCode == 13
-				if $(@el).find('.textarea').text().length > 1
-					@save_content()
-					if @model.get('parent') != null
-						@model.get('parent').get('children').add(new Bean)
-					else
-						@model.get('children').add(new Bean)
-			else if e.keyCode == 9 && e.shiftKey == true
-				@tab_back($(@el))
+			if e.keyCode == 13 then @test_to_add_bean(e)
+			else if e.keyCode == 9 && e.shiftKey == true then @tab_back($(@el))
 			else if e.keyCode == 9 then @tab_over()
 			else if e.keyCode == 38 then @go_up()
 			else if e.keyCode == 40 then @go_down()
 			else @key_record(e.keyCode, e.shiftKey)
 
 
+	test_to_add_bean : (e) ->
+		e.preventDefault()
+		if @textarea.text().length > 1
+			@save_content()
+			if @model.get('parent') != null
+				@model.get('parent').get('children').add(new Bean)
+			else
+				@model.get('children').add(new Bean)
+
+
 	change_hours_spent : ->
-		full_string 		= $(@el).find('.textarea').text()
+		full_string 		= @textarea.text()
 		index		= full_string.search('#hrs') - 1
 		current_char	= parseInt(full_string.charAt(index))
 		string_num	= ''
@@ -60,7 +63,7 @@ class BeanView extends Backbone.View
 			delete_me = string_num + '#hrs'
 			full_string = full_string.replace(delete_me, ' ')
 
-			$(@el).find('.textarea').text(full_string)
+			@textarea.text(full_string)
 			$(@el).find('.hour_wrap').append(template)
 
 			#TODO - would be neat to have this more of a utility function. hate this syntax...
@@ -79,7 +82,22 @@ class BeanView extends Backbone.View
 		$(@el).find('.hrs_total').text(hrs)
 	
 
+	test_for_deletion : ->
+		if((@model.get('parent') != null) && (@last_length == 0))
+			@go_up()
+			@model.get('parent').get('children').remove(@model)
+			if $(@el).parent().children().length == 1 
+				$(@el).parent().remove()
+			else
+				$(@el).remove()
+
 	key_record : (code, shiftKey) ->
+		#console.log code
+
+		#TODO - this is kinda wierd, probably a better way to do it
+		if code == 8 && @last_length == 0 then @test_for_deletion()
+		@last_length = @textarea.text().length
+
 		if code == 16 then return false
 
 		if code == 50 && shiftKey
@@ -87,7 +105,7 @@ class BeanView extends Backbone.View
 				collection 	: project.get('people')
 				parent 	: @
 
-			$(@el).find('.textarea').append(@person_selector.render().el)
+			@textarea.append(@person_selector.render().el)
 			$(@el).find('.person_selector').find('li:first-child').addClass('selected')
 			$(@el).find('.person_selector').find('input').focus()
 
@@ -111,6 +129,9 @@ class BeanView extends Backbone.View
 		new_bean = bean.get('view').render().el
 		$(@el).next().append(new_bean)
 		$(new_bean).find('.textarea').focus()
+
+	remove_bean_from_dom : (bean) ->
+
 
 	append_user : (user) ->
 		#TODO - this actually needs  to work
@@ -166,7 +187,7 @@ class BeanView extends Backbone.View
 				@focus_me(el.next())
 
 	save_content : ->
-		@model.set(content : $(@el).find('.textarea').text())
+		@model.set(content : @textarea.text())
 
 	focus_me : (el = $(@el)) ->
 		$('.bean').removeClass('focus')
@@ -188,6 +209,11 @@ class BeanView extends Backbone.View
 		#TODO - probably shouldn't go here, but not sure how to do this yet
 		if @model.get('my_hours_spent') == 0
 			$(@el).find('.hour_wrap').find('.hours').remove()
+
+		@textarea		= $(@el).find('.textarea')
+
+		#TODO - this should definitely go away. For some reason the length is set at 1 by default
+		@last_length	= @textarea.text().length - 1
 		return @
 
 
@@ -255,13 +281,6 @@ window.Bean = Backbone.RelationalModel.extend(
 
 	update_hours_estimated : ->
 
-
-	remove_bean : ->
-		view = $(@get('view').el)
-		wrap = view.next()
-		wrap.empty()
-		_.each @get('beans').models, (bean) =>
-			wrap.append(bean.get('view').render().el)
 )
 
 
@@ -276,6 +295,5 @@ window.Beans = Backbone.Collection.extend(
 				#TODO - this is a MAJOR design flaw. See Backbone relational documentation and fix at some point
 				#when I have a really bad bug and don't know wtf is going on.... it'l be this.
 				setTimeout (=>  bean.get('parent').get('view').append_child_bean(bean) ), 10
-
 			bean_view.focus_me()
 )

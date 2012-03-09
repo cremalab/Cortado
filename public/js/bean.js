@@ -37,14 +37,7 @@ TODO
     BeanView.prototype.handle_keys = function(e) {
       if (!this.person_selector) {
         if (e.keyCode === 13) {
-          if ($(this.el).find('.textarea').text().length > 1) {
-            this.save_content();
-            if (this.model.get('parent') !== null) {
-              return this.model.get('parent').get('children').add(new Bean);
-            } else {
-              return this.model.get('children').add(new Bean);
-            }
-          }
+          return this.test_to_add_bean(e);
         } else if (e.keyCode === 9 && e.shiftKey === true) {
           return this.tab_back($(this.el));
         } else if (e.keyCode === 9) {
@@ -59,10 +52,22 @@ TODO
       }
     };
 
+    BeanView.prototype.test_to_add_bean = function(e) {
+      e.preventDefault();
+      if (this.textarea.text().length > 1) {
+        this.save_content();
+        if (this.model.get('parent') !== null) {
+          return this.model.get('parent').get('children').add(new Bean);
+        } else {
+          return this.model.get('children').add(new Bean);
+        }
+      }
+    };
+
     BeanView.prototype.change_hours_spent = function() {
       var current_char, delete_me, full_string, hours, index, string_num, template,
         _this = this;
-      full_string = $(this.el).find('.textarea').text();
+      full_string = this.textarea.text();
       index = full_string.search('#hrs') - 1;
       current_char = parseInt(full_string.charAt(index));
       string_num = '';
@@ -74,7 +79,7 @@ TODO
         template = "<div class='hours'>" + string_num + "</div>";
         delete_me = string_num + '#hrs';
         full_string = full_string.replace(delete_me, ' ');
-        $(this.el).find('.textarea').text(full_string);
+        this.textarea.text(full_string);
         $(this.el).find('.hour_wrap').append(template);
         setTimeout((function() {
           return $(_this.el).find('.hours').addClass('show');
@@ -96,15 +101,29 @@ TODO
       return $(this.el).find('.hrs_total').text(hrs);
     };
 
+    BeanView.prototype.test_for_deletion = function() {
+      if ((this.model.get('parent') !== null) && (this.last_length === 0)) {
+        this.go_up();
+        this.model.get('parent').get('children').remove(this.model);
+        if ($(this.el).parent().children().length === 1) {
+          return $(this.el).parent().remove();
+        } else {
+          return $(this.el).remove();
+        }
+      }
+    };
+
     BeanView.prototype.key_record = function(code, shiftKey) {
       var _this = this;
+      if (code === 8 && this.last_length === 0) this.test_for_deletion();
+      this.last_length = this.textarea.text().length;
       if (code === 16) return false;
       if (code === 50 && shiftKey) {
         this.person_selector = new PersonSelector({
           collection: project.get('people'),
           parent: this
         });
-        $(this.el).find('.textarea').append(this.person_selector.render().el);
+        this.textarea.append(this.person_selector.render().el);
         $(this.el).find('.person_selector').find('li:first-child').addClass('selected');
         $(this.el).find('.person_selector').find('input').focus();
         setTimeout((function() {
@@ -129,6 +148,8 @@ TODO
       $(this.el).next().append(new_bean);
       return $(new_bean).find('.textarea').focus();
     };
+
+    BeanView.prototype.remove_bean_from_dom = function(bean) {};
 
     BeanView.prototype.append_user = function(user) {
       var img_path, name, template, wrap,
@@ -206,7 +227,7 @@ TODO
 
     BeanView.prototype.save_content = function() {
       return this.model.set({
-        content: $(this.el).find('.textarea').text()
+        content: this.textarea.text()
       });
     };
 
@@ -233,6 +254,8 @@ TODO
       if (this.model.get('my_hours_spent') === 0) {
         $(this.el).find('.hour_wrap').find('.hours').remove();
       }
+      this.textarea = $(this.el).find('.textarea');
+      this.last_length = this.textarea.text().length - 1;
       return this;
     };
 
@@ -311,17 +334,7 @@ TODO
         'hours_spent': new_hours
       });
     },
-    update_hours_estimated: function() {},
-    remove_bean: function() {
-      var view, wrap,
-        _this = this;
-      view = $(this.get('view').el);
-      wrap = view.next();
-      wrap.empty();
-      return _.each(this.get('beans').models, function(bean) {
-        return wrap.append(bean.get('view').render().el);
-      });
-    }
+    update_hours_estimated: function() {}
   });
 
   window.Beans = Backbone.Collection.extend({
