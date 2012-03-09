@@ -19,8 +19,22 @@
     };
 
     ShortcutKeys.prototype.save_document = function(e) {
+      var all_data;
       e.preventDefault();
-      return project.save();
+      console.log(project.get('beans').models[0]);
+      all_data = JSON.stringify(project.get('beans').models[0].get('children'));
+      return $.ajax({
+        method: 'POST',
+        url: '/add/project',
+        data: 'project=' + all_data({
+          success: function() {
+            return console.log('yes');
+          },
+          error: function(err) {
+            return console.log(err);
+          }
+        })
+      });
     };
 
     ShortcutKeys.prototype.carriage_return = function(e) {
@@ -56,16 +70,15 @@
   });
 
   $(function() {
-    var bean, bean2, shortcuts;
+    var bean, shortcuts;
     shortcuts = new ShortcutKeys;
     window.project = new Project;
     bean = new Bean;
+    bean.url = '/add/project';
     bean.set({
       'content': 'Brand New Project'
     });
-    project.get('beans').add(bean);
-    bean2 = new Bean;
-    return project.get('beans').models[0].get('children').add(bean2);
+    return project.get('beans').add(bean);
   });
 
 }).call(this);

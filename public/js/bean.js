@@ -53,11 +53,15 @@ TODO
     };
 
     BeanView.prototype.test_to_add_bean = function(e) {
+      var model_index;
       e.preventDefault();
       if (this.textarea.text().length > 1) {
         this.save_content();
         if (this.model.get('parent') !== null) {
-          return this.model.get('parent').get('children').add(new Bean);
+          model_index = _.indexOf(this.model.get('parent').get('children').models, this.model) + 1;
+          return this.model.get('parent').get('children').add(new Bean, {
+            at: model_index
+          });
         } else {
           return this.model.get('children').add(new Bean);
         }
@@ -139,13 +143,18 @@ TODO
       }
     };
 
-    BeanView.prototype.append_child_bean = function(bean) {
-      var new_bean;
+    BeanView.prototype.append_child_bean = function(bean, at_index) {
+      var is_not_last, new_bean;
       if (!$(this.el).next().hasClass('wrap')) {
         $(this.el).after('<div class="wrap"></div>');
       }
       new_bean = bean.get('view').render().el;
-      $(this.el).next().append(new_bean);
+      is_not_last = $(this.el).next().find('.bean').eq(at_index - 1);
+      if (is_not_last.length) {
+        is_not_last.after(new_bean);
+      } else {
+        $(this.el).next().append(new_bean);
+      }
       return $(new_bean).find('.textarea').focus();
     };
 
@@ -339,14 +348,14 @@ TODO
   window.Beans = Backbone.Collection.extend({
     initialize: function() {
       var _this = this;
-      return this.on('add', function(bean) {
+      return this.on('add', function(bean, parent, options) {
         var bean_view;
         bean_view = bean.get('view');
         if (_this.is_master === true) {
           $('#cortado').append(bean_view.render().el);
         } else {
           setTimeout((function() {
-            return bean.get('parent').get('view').append_child_bean(bean);
+            return bean.get('parent').get('view').append_child_bean(bean, options.index);
           }), 10);
         }
         return bean_view.focus_me();

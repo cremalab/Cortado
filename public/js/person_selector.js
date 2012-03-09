@@ -37,7 +37,7 @@
     PersonSelector.prototype.determine_match = function() {
       var input_text,
         _this = this;
-      input_text = this.input.val();
+      input_text = this.input.val().replace('@', '');
       return $.each($(this.el).find('li'), function(i, item) {
         var name, selected;
         name = $(item).find('.name').text();

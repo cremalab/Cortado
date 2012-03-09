@@ -49,9 +49,14 @@ find_by_username = (username, fn) ->
 		return fn(null, user) if user.username == username
 	fn null, null
 
+app.get '/add/project', ensure_authenticated, (req, res) ->
+	console.log req.query
+		#fs.writeFile db_path.songs, JSON.stringify(parsed_data, null, 4), (err) ->
+			#res.end()
+
 
 app.configure ->
-	app.use express.logger format: ':method :url :status'
+	#app.use express.logger format: ':method :url :status'
 	app.use express.cookieParser()
 	app.use express.bodyParser()
 	app.use express.session secret: 'keyboard cat'

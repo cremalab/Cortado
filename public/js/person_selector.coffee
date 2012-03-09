@@ -14,7 +14,7 @@ class window.PersonSelector extends Backbone.View
 		else @determine_match()
 			
 	determine_match : ->
-		input_text = @input.val()
+		input_text = @input.val().replace('@', '')
 		$.each $(@el).find('li'), (i, item) =>
 			name = $(item).find('.name').text()
 			if !@string_is_part_of_string(input_text, name)

@@ -7,7 +7,17 @@ class ShortcutKeys extends Backbone.Shortcuts
 
 	save_document : (e) ->
 		e.preventDefault()
-		project.save()
+		console.log project.get('beans').models[0]
+		all_data = JSON.stringify(project.get('beans').models[0].get('children'))
+		$.ajax
+			method	: 'POST'
+			url 		: '/add/project'
+			data		: 'project=' + all_data
+				success : ->
+					console.log 'yes'
+				error : (err) ->
+					console.log err
+		
 
 	carriage_return : (e) ->
 		e.preventDefault()
@@ -38,10 +48,7 @@ $ ->
 
 	#start a new project
 	bean = new Bean
+	bean.url = '/add/project'
 	bean.set('content' : 'Brand New Project')
 	project.get('beans').add bean
-
-
-	bean2 = new Bean
-	project.get('beans').models[0].get('children').add(bean2)
 	#

@@ -42,7 +42,9 @@ class BeanView extends Backbone.View
 		if @textarea.text().length > 1
 			@save_content()
 			if @model.get('parent') != null
-				@model.get('parent').get('children').add(new Bean)
+				model_index = _.indexOf(@model.get('parent').get('children').models, @model) + 1
+				@model.get('parent').get('children').add new Bean,
+					at : model_index
 			else
 				@model.get('children').add(new Bean)
 
@@ -124,12 +126,17 @@ class BeanView extends Backbone.View
 			@change_hours_estimated()
 
 
-	append_child_bean : (bean) ->
+	append_child_bean : (bean, at_index) ->
 		unless $(@el).next().hasClass('wrap')
 			$(@el).after('<div class="wrap"></div>')
-		
+
 		new_bean = bean.get('view').render().el
-		$(@el).next().append(new_bean)
+
+		#TODO - this is strange
+		is_not_last = $(@el).next().find('.bean').eq(at_index - 1)
+		if is_not_last.length then  is_not_last.after(new_bean)
+		else $(@el).next().append(new_bean)
+
 		$(new_bean).find('.textarea').focus()
 
 
@@ -290,13 +297,13 @@ window.Bean = Backbone.RelationalModel.extend(
 window.Beans = Backbone.Collection.extend(
 
 	initialize : ->
-		@on 'add', (bean) =>
+		@on 'add', (bean, parent, options) =>
 			bean_view 	= bean.get('view')
 			if @is_master == true
 				$('#cortado').append(bean_view.render().el)
 			else
 				#TODO - this is a MAJOR design flaw. See Backbone relational documentation and fix at some point
 				#when I have a really bad bug and don't know wtf is going on.... it'l be this.
-				setTimeout (=>  bean.get('parent').get('view').append_child_bean(bean) ), 10
+				setTimeout (=>  bean.get('parent').get('view').append_child_bean(bean, options.index) ), 10
 			bean_view.focus_me()
 )
