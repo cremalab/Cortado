@@ -23,8 +23,9 @@ class window.PersonSelector extends Backbone.View
 				$(item).show()
 
 	add_me : ->
-		this_guy = @get_selected().find('.uid').text()
-		@parent.model.add_user(this_guy)
+		this_guy = parseInt(@get_selected().find('.uid').text())
+		_.each project.get('people').models, (person) =>
+			if person.get('uid') == this_guy  then @parent.model.get('people').add(person)
 		@delete_me()
 
 	delete_me : ->

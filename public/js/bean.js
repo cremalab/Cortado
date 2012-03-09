@@ -27,7 +27,7 @@ TODO
 
     BeanView.prototype.initialize = function() {
       this.last_four_keys = [];
-      return _.bindAll(this, 'focus_me', 'add_user', 'append_child_bean', 'update_hours_spent');
+      return _.bindAll(this, 'focus_me', 'append_user', 'append_child_bean', 'update_hours_spent');
     };
 
     BeanView.prototype.handle_focus = function() {
@@ -96,19 +96,6 @@ TODO
       return $(this.el).find('.hrs_total').text(hrs);
     };
 
-    BeanView.prototype.add_user = function(user) {
-      var img_path, name, template, wrap,
-        _this = this;
-      wrap = $(this.el).find('.people');
-      name = user.get('name');
-      img_path = user.get('img_path');
-      template = "<div class='user_photo'><img class='user' src=/img/" + img_path + " alt=" + name + " /></div>";
-      wrap.append(template);
-      return setTimeout((function() {
-        return $(_this.el).find('.user').addClass('show');
-      }), 10);
-    };
-
     BeanView.prototype.key_record = function(code, shiftKey) {
       var _this = this;
       if (code === 16) return false;
@@ -141,6 +128,19 @@ TODO
       new_bean = bean.get('view').render().el;
       $(this.el).next().append(new_bean);
       return $(new_bean).find('.textarea').focus();
+    };
+
+    BeanView.prototype.append_user = function(user) {
+      var img_path, name, template, wrap,
+        _this = this;
+      wrap = $(this.el).find('.people');
+      name = user.get('name');
+      img_path = user.get('img_path');
+      template = "<div class='user_photo'><img class='user' src=/img/" + img_path + " alt=" + name + " /></div>";
+      wrap.append(template);
+      return setTimeout((function() {
+        return $(_this.el).find('.user').addClass('show');
+      }), 10);
     };
 
     BeanView.prototype.tab_over = function() {
@@ -218,8 +218,21 @@ TODO
     };
 
     BeanView.prototype.render = function() {
+      var other_html;
       this.template = _.template($('#bean').html(), this.model.toJSON());
+      other_html = '';
+      _.each(this.model.get('people').models, function(person) {
+        var img_path, name, template;
+        img_path = person.get('img_path');
+        name = person.get('name');
+        template = "<div class='user_photo'><img class='user show' src=/img/" + img_path + " alt=" + name + " /></div>";
+        return other_html += template;
+      });
       $(this.el).html(this.template);
+      $(this.el).find('.people').append(other_html);
+      if (this.model.get('my_hours_spent') === 0) {
+        $(this.el).find('.hour_wrap').find('.hours').remove();
+      }
       return this;
     };
 
@@ -242,7 +255,7 @@ TODO
     ],
     defaults: {
       content: '',
-      people: [],
+      people: '',
       keywords: [],
       my_hours_est: 0,
       my_hours_spent: 0,
@@ -252,11 +265,17 @@ TODO
     initialize: function() {
       var _this = this;
       this.set({
+        people: new Backbone.Collection
+      });
+      this.set({
         view: new BeanView({
           model: this
         })
       });
-      _.bindAll(this, 'remove_bean', 'add_user', 'update_hours_spent', 'update_hours_estimated');
+      _.bindAll(this, 'update_hours_spent', 'update_hours_estimated');
+      this.get('people').on('add', function(person) {
+        return _this.get('view').append_user(person);
+      });
       this.on('change:my_hours_spent', function() {
         var parent;
         if (!_this.get('children').models.length) {
@@ -301,13 +320,6 @@ TODO
       wrap.empty();
       return _.each(this.get('beans').models, function(bean) {
         return wrap.append(bean.get('view').render().el);
-      });
-    },
-    add_user: function(uid) {
-      var _this = this;
-      uid = parseInt(uid);
-      return _.each(project.get('people').models, function(person) {
-        if (person.get('uid') === uid) return _this.get('view').add_user(person);
       });
     }
   });

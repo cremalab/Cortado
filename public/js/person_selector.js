@@ -50,9 +50,14 @@
     };
 
     PersonSelector.prototype.add_me = function() {
-      var this_guy;
-      this_guy = this.get_selected().find('.uid').text();
-      this.parent.model.add_user(this_guy);
+      var this_guy,
+        _this = this;
+      this_guy = parseInt(this.get_selected().find('.uid').text());
+      _.each(project.get('people').models, function(person) {
+        if (person.get('uid') === this_guy) {
+          return _this.parent.model.get('people').add(person);
+        }
+      });
       return this.delete_me();
     };
 

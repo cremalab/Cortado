@@ -16,7 +16,7 @@ class BeanView extends Backbone.View
 		@last_four_keys	= []
 		_.bindAll @,
 			'focus_me'
-			'add_user'
+			'append_user'
 			'append_child_bean'
 			'update_hours_spent'
 
@@ -77,17 +77,7 @@ class BeanView extends Backbone.View
 		$(@el).find('.hrs_spent').text(hrs)
 	update_hours_estimated : (hrs) ->
 		$(@el).find('.hrs_total').text(hrs)
-
-	add_user : (user) ->
-		#TODO - this actually needs  to work
-		wrap 		= $(@el).find('.people')
-		name		= user.get('name')
-		img_path	= user.get('img_path')
-		template 	= "<div class='user_photo'><img class='user' src=/img/#{img_path} alt=#{name} /></div>"
-
-		wrap.append template
-		setTimeout (=> $(@el).find('.user').addClass('show') ), 10
-
+	
 
 	key_record : (code, shiftKey) ->
 		if code == 16 then return false
@@ -121,6 +111,15 @@ class BeanView extends Backbone.View
 		new_bean = bean.get('view').render().el
 		$(@el).next().append(new_bean)
 		$(new_bean).find('.textarea').focus()
+
+	append_user : (user) ->
+		#TODO - this actually needs  to work
+		wrap 		= $(@el).find('.people')
+		name		= user.get('name')
+		img_path	= user.get('img_path')
+		template 	= "<div class='user_photo'><img class='user' src=/img/#{img_path} alt=#{name} /></div>"
+		wrap.append template
+		setTimeout (=> $(@el).find('.user').addClass('show') ), 10
 
 	tab_over : ->
 		if @model.collection != null
@@ -176,7 +175,19 @@ class BeanView extends Backbone.View
 
 	render : ->
 		@template = _.template($('#bean').html(), @model.toJSON())
+		#TODO - make this a new instance of a view
+		other_html = ''
+		_.each @model.get('people').models, (person) ->
+			img_path 	= person.get('img_path')
+			name 	= person.get('name')
+			template 	= "<div class='user_photo'><img class='user show' src=/img/#{img_path} alt=#{name} /></div>"
+			other_html += template
 		$(@el).html(@template)
+		$(@el).find('.people').append(other_html)
+
+		#TODO - probably shouldn't go here, but not sure how to do this yet
+		if @model.get('my_hours_spent') == 0
+			$(@el).find('.hour_wrap').find('.hours').remove()
 		return @
 
 
@@ -196,7 +207,7 @@ window.Bean = Backbone.RelationalModel.extend(
 	
 	defaults :
 		content 		: ''
-		people 		: []
+		people 		: ''
 		keywords 		: []
 		my_hours_est 	: 0
 		my_hours_spent	: 0
@@ -204,14 +215,17 @@ window.Bean = Backbone.RelationalModel.extend(
 		hours_spent 	: 0
 
 	initialize : ->
-
+		#setting the people in the defaults will some how magically
+		#duplicate the people from the parents MAGIC!
+		@set(people : new Backbone.Collection)
 		@set(view : new BeanView(model : @))
 
 		_.bindAll @,
-			'remove_bean'
-			'add_user'
 			'update_hours_spent'
 			'update_hours_estimated'
+
+		@get('people').on 'add', (person) =>
+			@get('view').append_user(person)
 
 		@on 'change:my_hours_spent',  =>
 			if !@get('children').models.length
@@ -242,18 +256,12 @@ window.Bean = Backbone.RelationalModel.extend(
 	update_hours_estimated : ->
 
 
-
 	remove_bean : ->
 		view = $(@get('view').el)
 		wrap = view.next()
 		wrap.empty()
 		_.each @get('beans').models, (bean) =>
 			wrap.append(bean.get('view').render().el)
-
-	add_user : (uid) ->
-		uid	= parseInt(uid)
-		_.each project.get('people').models, (person) =>
-			if person.get('uid') == uid  then @get('view').add_user(person)
 )
 
 
@@ -265,7 +273,8 @@ window.Beans = Backbone.Collection.extend(
 			if @is_master == true
 				$('#cortado').append(bean_view.render().el)
 			else
-				#TODO - this is a major design flaw. See Backbone relational documentation and fix at some point
+				#TODO - this is a MAJOR design flaw. See Backbone relational documentation and fix at some point
+				#when I have a really bad bug and don't know wtf is going on.... it'l be this.
 				setTimeout (=>  bean.get('parent').get('view').append_child_bean(bean) ), 10
 
 			bean_view.focus_me()
