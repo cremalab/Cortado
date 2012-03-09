@@ -291,7 +291,7 @@ window.Bean = Backbone.RelationalModel.extend(
 
 	update_hours_estimated : ->
 
-)
+) 
 
 
 window.Beans = Backbone.Collection.extend(
