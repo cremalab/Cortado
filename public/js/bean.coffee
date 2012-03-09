@@ -49,7 +49,8 @@ class BeanView extends Backbone.View
 
 	change_hours_spent : ->
 		full_string 		= @textarea.text()
-		index		= full_string.search('#hrs') - 1
+		index		= full_string.search('#hr') - 1
+		#index		= full_string.search('#hrs') - 1
 		current_char	= parseInt(full_string.charAt(index))
 		string_num	= ''
 
@@ -60,7 +61,8 @@ class BeanView extends Backbone.View
 		if isFinite(parseInt(string_num))
 			#TODO - this should be it's own backbone view so we can delete them later
 			template = "<div class='hours'>#{string_num}</div>"
-			delete_me = string_num + '#hrs'
+			delete_me = string_num + '#hr'
+			#delete_me = string_num + '#hrs'
 			full_string = full_string.replace(delete_me, ' ')
 
 			@textarea.text(full_string)
@@ -129,6 +131,7 @@ class BeanView extends Backbone.View
 		new_bean = bean.get('view').render().el
 		$(@el).next().append(new_bean)
 		$(new_bean).find('.textarea').focus()
+
 
 	remove_bean_from_dom : (bean) ->
 
@@ -213,7 +216,7 @@ class BeanView extends Backbone.View
 		@textarea		= $(@el).find('.textarea')
 
 		#TODO - this should definitely go away. For some reason the length is set at 1 by default
-		@last_length	= @textarea.text().length - 1
+		#@last_length	= @textarea.text().length - 1
 		return @
 
 

@@ -68,7 +68,7 @@ TODO
       var current_char, delete_me, full_string, hours, index, string_num, template,
         _this = this;
       full_string = this.textarea.text();
-      index = full_string.search('#hrs') - 1;
+      index = full_string.search('#hr') - 1;
       current_char = parseInt(full_string.charAt(index));
       string_num = '';
       while (isFinite(current_char)) {
@@ -77,7 +77,7 @@ TODO
       }
       if (isFinite(parseInt(string_num))) {
         template = "<div class='hours'>" + string_num + "</div>";
-        delete_me = string_num + '#hrs';
+        delete_me = string_num + '#hr';
         full_string = full_string.replace(delete_me, ' ');
         this.textarea.text(full_string);
         $(this.el).find('.hour_wrap').append(template);
@@ -255,7 +255,6 @@ TODO
         $(this.el).find('.hour_wrap').find('.hours').remove();
       }
       this.textarea = $(this.el).find('.textarea');
-      this.last_length = this.textarea.text().length - 1;
       return this;
     };
 
