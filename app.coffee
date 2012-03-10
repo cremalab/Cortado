@@ -51,8 +51,6 @@ find_by_username = (username, fn) ->
 
 app.get '/add/project', ensure_authenticated, (req, res) ->
 	console.log req.query
-		#fs.writeFile db_path.songs, JSON.stringify(parsed_data, null, 4), (err) ->
-			#res.end()
 
 
 app.configure ->
@@ -82,7 +80,6 @@ app.get '/', (req, res) ->
 	res.render 'index'
 		today : today
 		num_requests : 3
-		breadcrumb : ['Southern Attraction', 'UX', 'HomePage']
 
 app.get '/login', (req, res) ->
 	res.render 'login'

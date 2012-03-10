@@ -53,6 +53,7 @@
     initialize: function() {
       var people,
         _this = this;
+      _.bindAll(this, 'update_breadcrumb');
       this.set({
         'beans': new Beans
       });
@@ -66,6 +67,28 @@
           });
         }
       });
+    },
+    update_breadcrumb: function() {
+      var _this = this;
+      return setTimeout((function() {
+        var element, html, i, new_crumb;
+        $('#breadcrumb').find('ul').empty();
+        element = $('.bean.focus');
+        html = [];
+        html.push('<li>' + element.find('.textarea').text() + '</li>');
+        while (element.hasClass('bean')) {
+          element = element.parent().prev();
+          if (element.find('.textarea').length) {
+            html.push('<li>' + element.find('.textarea').text() + '</li>');
+          }
+        }
+        html.reverse();
+        new_crumb = '';
+        for (i in html) {
+          new_crumb += html[i];
+        }
+        return $('#breadcrumb').find('ul').append(new_crumb);
+      }), 10);
     }
   });
 

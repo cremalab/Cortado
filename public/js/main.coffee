@@ -17,7 +17,6 @@ class ShortcutKeys extends Backbone.Shortcuts
 					console.log 'yes'
 				error : (err) ->
 					console.log err
-		
 
 	carriage_return : (e) ->
 		e.preventDefault()
@@ -30,6 +29,9 @@ window.Project = Backbone.RelationalModel.extend(
 
 	initialize : ->
 
+		_.bindAll @,
+			'update_breadcrumb'
+
 		@set('beans' : new Beans)
 		@get('beans').is_master = true
 
@@ -38,6 +40,30 @@ window.Project = Backbone.RelationalModel.extend(
 		people.fetch
 			success : =>
 				@set('people' : people)
+
+	update_breadcrumb : ->
+		#TODO - this is having a hard time finding the bean.focus on time
+		setTimeout (=> 
+			$('#breadcrumb').find('ul').empty()
+
+			element	= $('.bean.focus')
+			html 		= []
+
+			html.push('<li>' + element.find('.textarea').text() + '</li>')
+
+			while element.hasClass('bean')
+				element = element.parent().prev()
+				if element.find('.textarea').length
+					html.push('<li>' + element.find('.textarea').text() + '</li>')
+
+			html.reverse()
+			new_crumb = ''
+			for i of html
+  				 new_crumb += html[i]
+
+			$('#breadcrumb').find('ul').append(new_crumb)
+		), 10
+
 )
 
 

@@ -244,7 +244,8 @@ TODO
       if (el == null) el = $(this.el);
       $('.bean').removeClass('focus');
       el.addClass('focus');
-      return el.find('.textarea').focus();
+      el.find('.textarea').focus();
+      return project.update_breadcrumb();
     };
 
     BeanView.prototype.render = function() {
@@ -264,6 +265,7 @@ TODO
         $(this.el).find('.hour_wrap').find('.hours').remove();
       }
       this.textarea = $(this.el).find('.textarea');
+      this.last_length = this.textarea.text().length - 1;
       return this;
     };
 

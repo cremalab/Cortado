@@ -168,7 +168,6 @@ class BeanView extends Backbone.View
 				setTimeout (=> wrap.remove() ), 1000
 			@model.get('parent').get('parent').get('children').add(@model)
 
-
 	go_up : ->
 		if $(@el).prev('.bean').length 
 			@focus_me($(@el).prev('.bean'))
@@ -203,6 +202,8 @@ class BeanView extends Backbone.View
 		$('.bean').removeClass('focus')
 		el.addClass('focus')
 		el.find('.textarea').focus()
+		project.update_breadcrumb()
+		
 
 	render : ->
 		@template = _.template($('#bean').html(), @model.toJSON())
@@ -223,7 +224,7 @@ class BeanView extends Backbone.View
 		@textarea		= $(@el).find('.textarea')
 
 		#TODO - this should definitely go away. For some reason the length is set at 1 by default
-		#@last_length	= @textarea.text().length - 1
+		@last_length	= @textarea.text().length - 1
 		return @
 
 
