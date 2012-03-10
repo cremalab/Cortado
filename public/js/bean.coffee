@@ -1,10 +1,3 @@
-###
-TODO
-* update hours on tab in and tab out
-* populate users to parents
-###
-
-
 class BeanView extends Backbone.View
 	className : 'bean'
 	events :
@@ -18,7 +11,11 @@ class BeanView extends Backbone.View
 			'focus_me'
 			'append_user'
 			'append_child_bean'
+			'remove_child_bean'
 			'update_hours_spent'
+
+	save_content : ->
+		@model.set(content : @textarea.text())
 
 	handle_focus : ->
 		#TODO - this is stupid. By default backbone passes the event
@@ -37,6 +34,41 @@ class BeanView extends Backbone.View
 			else @key_record(e.keyCode, e.shiftKey)
 
 
+	key_record : (code, shiftKey) ->
+
+		if code == 8 then @test_for_deletion()
+
+		if code == 16 then return false
+
+		if code == 50 && shiftKey
+			@person_selector = new PersonSelector
+				collection 	: project.get('people')
+				parent 	: @
+
+			@textarea.append(@person_selector.render().el)
+			$(@el).find('.person_selector').find('li:first-child').addClass('selected')
+			$(@el).find('.person_selector').find('input').focus()
+
+			setTimeout (=>  $(@el).find('.person_selector').addClass('show') ), 10
+
+		@last_four_keys.unshift(code)
+		if @last_four_keys.length > 4
+			@last_four_keys.pop()
+
+		if _.isEqual(@last_four_keys, [83, 82, 72, 51])
+			@change_hours_spent()
+
+		else if _.isEqual(@last_four_keys, [84, 83, 69, 51])
+			@change_hours_estimated()
+
+
+
+
+	
+
+
+	# ------- Bean Modification ------- #
+
 	test_to_add_bean : (e) ->
 		e.preventDefault()
 		if @textarea.text().length > 1
@@ -48,6 +80,72 @@ class BeanView extends Backbone.View
 			else
 				@model.get('children').add(new Bean)
 
+	test_for_deletion : ->
+		unless @textarea.text().replace(/^\s+|\s+$/g, '').length
+			if @model.get('parent') != null
+				@go_up()
+				@model.get('parent').get('children').remove(@model)
+				if $(@el).parent().children().length == 1 
+					$(@el).parent().remove()
+				else
+					$(@el).remove()
+
+	append_child_bean : (bean, at_index) ->
+		unless $(@el).next().hasClass('wrap')
+			$(@el).after('<div class="wrap"></div>')
+
+		new_bean = bean.get('view').render().el
+
+		#TODO - this is strange
+		is_not_last = $(@el).next().find('.bean').eq(at_index - 1)
+		if is_not_last.length then  is_not_last.after(new_bean)
+		else $(@el).next().append(new_bean)
+
+		$(new_bean).find('.textarea').focus()
+
+	remove_child_bean : (bean) ->
+
+	tab_over : ->
+		if @model.get('parent') != null
+			if @model != @model.collection.models[0] 
+				@save_content()
+				current_parent	= @model.get('parent').get('children')
+				this_index	 	= _.indexOf(current_parent.models, @model)
+				new_parent 	= current_parent.models[this_index - 1].get('children').add(@model)
+
+	tab_back : ->
+		if @model.get('parent').get('parent') != null
+			@save_content()
+			console.log @model
+			if $(@el).parent().children().length == 1
+				wrap = $(@el).parent()
+				#TODO - find a way around this
+				setTimeout (=> wrap.remove() ), 10
+			@model.get('parent').get('parent').get('children').add(@model)
+			console.log @model
+
+	# ------- End Bean Modification ------- #
+
+
+
+
+	# ------- User Modification ------- #
+
+	append_user : (user) ->
+		#TODO - this actually needs  to work
+		wrap 		= $(@el).find('.people')
+		name		= user.get('name')
+		img_path	= user.get('img_path')
+		template 	= "<div class='user_photo'><img class='user' src=/img/#{img_path} alt=#{name} /></div>"
+		wrap.append template
+		setTimeout (=> $(@el).find('.user').addClass('show') ), 10
+
+	# ------- End User Modification ------- #
+
+	
+
+
+	# ------- Attribute Modification ------- #
 
 	change_hours_spent : ->
 		full_string 		= @textarea.text()
@@ -84,89 +182,13 @@ class BeanView extends Backbone.View
 		$(@el).find('.hrs_spent').text(hrs)
 	update_hours_estimated : (hrs) ->
 		$(@el).find('.hrs_total').text(hrs)
-	
 
-	test_for_deletion : ->
-		if((@model.get('parent') != null) && (@last_length == 0))
-			@go_up()
-			@model.get('parent').get('children').remove(@model)
-			if $(@el).parent().children().length == 1 
-				$(@el).parent().remove()
-			else
-				$(@el).remove()
-
-	key_record : (code, shiftKey) ->
-		#console.log code
-
-		#TODO - this is kinda wierd, probably a better way to do it
-		if code == 8 && @last_length == 0 then @test_for_deletion()
-		@last_length = @textarea.text().length
-
-		if code == 16 then return false
-
-		if code == 50 && shiftKey
-			@person_selector = new PersonSelector
-				collection 	: project.get('people')
-				parent 	: @
-
-			@textarea.append(@person_selector.render().el)
-			$(@el).find('.person_selector').find('li:first-child').addClass('selected')
-			$(@el).find('.person_selector').find('input').focus()
-
-			setTimeout (=>  $(@el).find('.person_selector').addClass('show') ), 10
-
-		@last_four_keys.unshift(code)
-		if @last_four_keys.length > 4
-			@last_four_keys.pop()
-
-		if _.isEqual(@last_four_keys, [83, 82, 72, 51])
-			@change_hours_spent()
-
-		else if _.isEqual(@last_four_keys, [84, 83, 69, 51])
-			@change_hours_estimated()
+	# ------- End Attribute Modification ------- #
 
 
-	append_child_bean : (bean, at_index) ->
-		unless $(@el).next().hasClass('wrap')
-			$(@el).after('<div class="wrap"></div>')
-
-		new_bean = bean.get('view').render().el
-
-		#TODO - this is strange
-		is_not_last = $(@el).next().find('.bean').eq(at_index - 1)
-		if is_not_last.length then  is_not_last.after(new_bean)
-		else $(@el).next().append(new_bean)
-
-		$(new_bean).find('.textarea').focus()
 
 
-	remove_bean_from_dom : (bean) ->
-
-
-	append_user : (user) ->
-		#TODO - this actually needs  to work
-		wrap 		= $(@el).find('.people')
-		name		= user.get('name')
-		img_path	= user.get('img_path')
-		template 	= "<div class='user_photo'><img class='user' src=/img/#{img_path} alt=#{name} /></div>"
-		wrap.append template
-		setTimeout (=> $(@el).find('.user').addClass('show') ), 10
-
-	tab_over : ->
-		if @model.collection
-			if @model != @model.collection.models[0] 
-				@save_content()
-				current_parent	= @model.get('parent').get('children')
-				this_index	 	= _.indexOf(current_parent.models, @model)
-				new_parent 	= current_parent.models[this_index - 1].get('children').add(@model)
-
-	tab_back : ->
-		if @model.get('parent').get('parent') != null
-			@save_content()
-			if $(@el).parent().children().length == 1
-				wrap = $(@el).parent()
-				setTimeout (=> wrap.remove() ), 1000
-			@model.get('parent').get('parent').get('children').add(@model)
+	# ------- Visuals ------- #
 
 	go_up : ->
 		if $(@el).prev('.bean').length 
@@ -195,15 +217,17 @@ class BeanView extends Backbone.View
 			if re_focus 
 				@focus_me(el.next())
 
-	save_content : ->
-		@model.set(content : @textarea.text())
 
 	focus_me : (el = $(@el)) ->
 		$('.bean').removeClass('focus')
 		el.addClass('focus')
 		el.find('.textarea').focus()
 		project.update_breadcrumb()
-		
+
+	# ------- End Visuals ------- #
+
+
+
 
 	render : ->
 		@template = _.template($('#bean').html(), @model.toJSON())
@@ -222,9 +246,6 @@ class BeanView extends Backbone.View
 			$(@el).find('.hour_wrap').find('.hours').remove()
 
 		@textarea		= $(@el).find('.textarea')
-
-		#TODO - this should definitely go away. For some reason the length is set at 1 by default
-		@last_length	= @textarea.text().length - 1
 		return @
 
 

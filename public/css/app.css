@@ -329,7 +329,9 @@ section#document header li {
   margin-right: 10px;
 }
 section#document header li:after {
-  content: '>';
+  content: '-->';
+  opacity: 0.2;
+  padding-left: 10px;
 }
 section#document header li:last-child:after {
   content: '';

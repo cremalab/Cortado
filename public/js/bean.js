@@ -1,10 +1,3 @@
-
-/*
-TODO
-* update hours on tab in and tab out
-* populate users to parents
-*/
-
 (function() {
   var BeanView,
     __hasProp = Object.prototype.hasOwnProperty,
@@ -27,7 +20,13 @@ TODO
 
     BeanView.prototype.initialize = function() {
       this.last_four_keys = [];
-      return _.bindAll(this, 'focus_me', 'append_user', 'append_child_bean', 'update_hours_spent');
+      return _.bindAll(this, 'focus_me', 'append_user', 'append_child_bean', 'remove_child_bean', 'update_hours_spent');
+    };
+
+    BeanView.prototype.save_content = function() {
+      return this.model.set({
+        content: this.textarea.text()
+      });
     };
 
     BeanView.prototype.handle_focus = function() {
@@ -52,6 +51,31 @@ TODO
       }
     };
 
+    BeanView.prototype.key_record = function(code, shiftKey) {
+      var _this = this;
+      if (code === 8) this.test_for_deletion();
+      if (code === 16) return false;
+      if (code === 50 && shiftKey) {
+        this.person_selector = new PersonSelector({
+          collection: project.get('people'),
+          parent: this
+        });
+        this.textarea.append(this.person_selector.render().el);
+        $(this.el).find('.person_selector').find('li:first-child').addClass('selected');
+        $(this.el).find('.person_selector').find('input').focus();
+        setTimeout((function() {
+          return $(_this.el).find('.person_selector').addClass('show');
+        }), 10);
+      }
+      this.last_four_keys.unshift(code);
+      if (this.last_four_keys.length > 4) this.last_four_keys.pop();
+      if (_.isEqual(this.last_four_keys, [83, 82, 72, 51])) {
+        return this.change_hours_spent();
+      } else if (_.isEqual(this.last_four_keys, [84, 83, 69, 51])) {
+        return this.change_hours_estimated();
+      }
+    };
+
     BeanView.prototype.test_to_add_bean = function(e) {
       var model_index;
       e.preventDefault();
@@ -66,6 +90,79 @@ TODO
           return this.model.get('children').add(new Bean);
         }
       }
+    };
+
+    BeanView.prototype.test_for_deletion = function() {
+      if (!this.textarea.text().replace(/^\s+|\s+$/g, '').length) {
+        if (this.model.get('parent') !== null) {
+          this.go_up();
+          this.model.get('parent').get('children').remove(this.model);
+          if ($(this.el).parent().children().length === 1) {
+            return $(this.el).parent().remove();
+          } else {
+            return $(this.el).remove();
+          }
+        }
+      }
+    };
+
+    BeanView.prototype.append_child_bean = function(bean, at_index) {
+      var is_not_last, new_bean;
+      if (!$(this.el).next().hasClass('wrap')) {
+        $(this.el).after('<div class="wrap"></div>');
+      }
+      new_bean = bean.get('view').render().el;
+      is_not_last = $(this.el).next().find('.bean').eq(at_index - 1);
+      if (is_not_last.length) {
+        is_not_last.after(new_bean);
+      } else {
+        $(this.el).next().append(new_bean);
+      }
+      return $(new_bean).find('.textarea').focus();
+    };
+
+    BeanView.prototype.remove_child_bean = function(bean) {};
+
+    BeanView.prototype.tab_over = function() {
+      var current_parent, new_parent, this_index;
+      if (this.model.get('parent') !== null) {
+        if (this.model !== this.model.collection.models[0]) {
+          this.save_content();
+          current_parent = this.model.get('parent').get('children');
+          this_index = _.indexOf(current_parent.models, this.model);
+          return new_parent = current_parent.models[this_index - 1].get('children').add(this.model);
+        }
+      }
+    };
+
+    BeanView.prototype.tab_back = function() {
+      var wrap,
+        _this = this;
+      if (this.model.get('parent').get('parent') !== null) {
+        this.save_content();
+        console.log(this.model);
+        if ($(this.el).parent().children().length === 1) {
+          wrap = $(this.el).parent();
+          setTimeout((function() {
+            return wrap.remove();
+          }), 10);
+        }
+        this.model.get('parent').get('parent').get('children').add(this.model);
+        return console.log(this.model);
+      }
+    };
+
+    BeanView.prototype.append_user = function(user) {
+      var img_path, name, template, wrap,
+        _this = this;
+      wrap = $(this.el).find('.people');
+      name = user.get('name');
+      img_path = user.get('img_path');
+      template = "<div class='user_photo'><img class='user' src=/img/" + img_path + " alt=" + name + " /></div>";
+      wrap.append(template);
+      return setTimeout((function() {
+        return $(_this.el).find('.user').addClass('show');
+      }), 10);
     };
 
     BeanView.prototype.change_hours_spent = function() {
@@ -105,101 +202,6 @@ TODO
       return $(this.el).find('.hrs_total').text(hrs);
     };
 
-    BeanView.prototype.test_for_deletion = function() {
-      if ((this.model.get('parent') !== null) && (this.last_length === 0)) {
-        this.go_up();
-        this.model.get('parent').get('children').remove(this.model);
-        if ($(this.el).parent().children().length === 1) {
-          return $(this.el).parent().remove();
-        } else {
-          return $(this.el).remove();
-        }
-      }
-    };
-
-    BeanView.prototype.key_record = function(code, shiftKey) {
-      var _this = this;
-      if (code === 8 && this.last_length === 0) this.test_for_deletion();
-      this.last_length = this.textarea.text().length;
-      if (code === 16) return false;
-      if (code === 50 && shiftKey) {
-        this.person_selector = new PersonSelector({
-          collection: project.get('people'),
-          parent: this
-        });
-        this.textarea.append(this.person_selector.render().el);
-        $(this.el).find('.person_selector').find('li:first-child').addClass('selected');
-        $(this.el).find('.person_selector').find('input').focus();
-        setTimeout((function() {
-          return $(_this.el).find('.person_selector').addClass('show');
-        }), 10);
-      }
-      this.last_four_keys.unshift(code);
-      if (this.last_four_keys.length > 4) this.last_four_keys.pop();
-      if (_.isEqual(this.last_four_keys, [83, 82, 72, 51])) {
-        return this.change_hours_spent();
-      } else if (_.isEqual(this.last_four_keys, [84, 83, 69, 51])) {
-        return this.change_hours_estimated();
-      }
-    };
-
-    BeanView.prototype.append_child_bean = function(bean, at_index) {
-      var is_not_last, new_bean;
-      if (!$(this.el).next().hasClass('wrap')) {
-        $(this.el).after('<div class="wrap"></div>');
-      }
-      new_bean = bean.get('view').render().el;
-      is_not_last = $(this.el).next().find('.bean').eq(at_index - 1);
-      if (is_not_last.length) {
-        is_not_last.after(new_bean);
-      } else {
-        $(this.el).next().append(new_bean);
-      }
-      return $(new_bean).find('.textarea').focus();
-    };
-
-    BeanView.prototype.remove_bean_from_dom = function(bean) {};
-
-    BeanView.prototype.append_user = function(user) {
-      var img_path, name, template, wrap,
-        _this = this;
-      wrap = $(this.el).find('.people');
-      name = user.get('name');
-      img_path = user.get('img_path');
-      template = "<div class='user_photo'><img class='user' src=/img/" + img_path + " alt=" + name + " /></div>";
-      wrap.append(template);
-      return setTimeout((function() {
-        return $(_this.el).find('.user').addClass('show');
-      }), 10);
-    };
-
-    BeanView.prototype.tab_over = function() {
-      var current_parent, new_parent, this_index;
-      if (this.model.collection) {
-        if (this.model !== this.model.collection.models[0]) {
-          this.save_content();
-          current_parent = this.model.get('parent').get('children');
-          this_index = _.indexOf(current_parent.models, this.model);
-          return new_parent = current_parent.models[this_index - 1].get('children').add(this.model);
-        }
-      }
-    };
-
-    BeanView.prototype.tab_back = function() {
-      var wrap,
-        _this = this;
-      if (this.model.get('parent').get('parent') !== null) {
-        this.save_content();
-        if ($(this.el).parent().children().length === 1) {
-          wrap = $(this.el).parent();
-          setTimeout((function() {
-            return wrap.remove();
-          }), 1000);
-        }
-        return this.model.get('parent').get('parent').get('children').add(this.model);
-      }
-    };
-
     BeanView.prototype.go_up = function() {
       if ($(this.el).prev('.bean').length) {
         return this.focus_me($(this.el).prev('.bean'));
@@ -234,12 +236,6 @@ TODO
       }
     };
 
-    BeanView.prototype.save_content = function() {
-      return this.model.set({
-        content: this.textarea.text()
-      });
-    };
-
     BeanView.prototype.focus_me = function(el) {
       if (el == null) el = $(this.el);
       $('.bean').removeClass('focus');
@@ -265,7 +261,6 @@ TODO
         $(this.el).find('.hour_wrap').find('.hours').remove();
       }
       this.textarea = $(this.el).find('.textarea');
-      this.last_length = this.textarea.text().length - 1;
       return this;
     };
 
