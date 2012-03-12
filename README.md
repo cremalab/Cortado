@@ -11,6 +11,9 @@ To get started you'll need [node](http://nodejs.org). After the download and ins
 Run the server with node-dev
 `node-dev runner.js`
 
+If you're changing clientside coffeescript you'll have to compile yourself.
+`coffee -w -c public/js`
+
 ## Client Side Stack
 * [Backbone](http://documentcloud.github.com/backbone/)
 * [Backbone Relational](http://documentcloud.github.com/underscore/)
