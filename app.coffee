@@ -5,7 +5,7 @@ fs 			= require 'fs'
 stylus 		= require 'stylus'
 app 			= express.createServer()
 io			= require('socket.io').listen(app)
-port 			= 13984
+port 			= process.env.PORT || 3000
 
 LocalStrategy	= require('passport-local').Strategy
 
