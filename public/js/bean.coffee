@@ -17,12 +17,7 @@ class BeanView extends Backbone.View
 	save_content : ->
 		@model.set(content : @textarea.text())
 
-	handle_focus : ->
-		#TODO - this is stupid. By default backbone passes the event
-		# as the first parameter. This will just strip out the param and 
-		# pass it to the next function
-		@focus_me()
-
+	handle_focus : -> @focus_me()
 
 	handle_keys : (e) ->
 		if !@person_selector
@@ -71,7 +66,7 @@ class BeanView extends Backbone.View
 
 	test_to_add_bean : (e) ->
 		e.preventDefault()
-		if @textarea.text().length > 1
+		if @text_length()
 			@save_content()
 			if @model.get('parent') != null
 				model_index = _.indexOf(@model.get('parent').get('children').models, @model) + 1
@@ -81,7 +76,7 @@ class BeanView extends Backbone.View
 				@model.get('children').add(new Bean)
 
 	test_for_deletion : ->
-		unless @textarea.text().replace(/^\s+|\s+$/g, '').length
+		unless @text_length()
 			if @model.get('parent') != null
 				@go_up()
 				@model.get('parent').get('children').remove(@model)
@@ -90,39 +85,82 @@ class BeanView extends Backbone.View
 				else
 					$(@el).remove()
 
+
+	# In the voice of the parent
+	# Append a new child bean to me.
+	# Do I have a wrap to support child beans? If not add one.
+	# Look at the child bean. Does it have children?
+	# If it has children, iterate over them and append them to the bean.
+
 	append_child_bean : (bean, at_index) ->
-		unless $(@el).next().hasClass('wrap')
-			$(@el).after('<div class="wrap"></div>')
+		
+		childs_html	= @gather_child_bean_views(bean, true)
+		closest_kin 	= $(@el).next().children('.bean').eq(at_index - 1)
 
-		new_bean = bean.get('view').render().el
+		#if no siblings exist yet
+		if !closest_kin.length
+			$(@el).after(childs_html)
+		#if the sibling I'm adding after has children
+		else if closest_kin.next().hasClass('wrap')
+			closest_kin.next().after(childs_html)
+			childs_html.find('.bean:first').unwrap()
+		#if the sibling I'm adding after does not have children
+		else
+			closest_kin.after(childs_html)
+			childs_html.find('.bean:first').unwrap()
 
-		#TODO - this is strange
-		is_not_last = $(@el).next().find('.bean').eq(at_index - 1)
-		if is_not_last.length then  is_not_last.after(new_bean)
-		else $(@el).next().append(new_bean)
+		$(bean.get('view').el).find('.textarea').focus()
 
-		$(new_bean).find('.textarea').focus()
+
+	# Do I have children?
+	# If I do, create a new wrapping element and append all my children to it
+	gather_child_bean_views : (parent, master = false, wrap = $('<div class="wrap"></div>'))  ->
+
+		children 		= parent.get('children').models
+		parent_view 	= $(parent.get('view').render().el)
+		wrap.append(parent_view)
+
+		if children.length
+			append_to = $('<div class="wrap"></div>')
+			wrap.find(parent_view.after(append_to))
+
+			i = 0
+			while i < children.length
+				@gather_child_bean_views(children[i], false, append_to)
+				i++
+
+		if master
+			return wrap
+
+
 
 	remove_child_bean : (bean) ->
 
+	#Tab over only if my parent exists and I'm not the first child of my parent
+	#Add me to my immediately previous sibling
 	tab_over : ->
-		if @model.get('parent') != null
-			if @model != @model.collection.models[0] 
-				@save_content()
-				current_parent	= @model.get('parent').get('children')
-				this_index	 	= _.indexOf(current_parent.models, @model)
-				new_parent 	= current_parent.models[this_index - 1].get('children').add(@model)
+		current_parent	 = @model.get('parent').get('children')
+		index_as_a_child	 = _.indexOf(current_parent.models, @model)
+		if @model.get('parent') != null && index_as_a_child != 0
+			@save_content()
+			current_parent.models[index_as_a_child - 1].get('children').add(@model)
+		
 
+	#Tab back only if my parent has a parent
+	#Add me as my parents closest sibling
 	tab_back : ->
 		if @model.get('parent').get('parent') != null
 			@save_content()
-			console.log @model
+			future_family	= @model.get('parent').get('parent').get('children')
+			current_parent	= @model.get('parent')
+			new_index 	= _.indexOf(future_family.models, current_parent)
+			future_family.add @model,
+				at : new_index + 1
+
+			#TODO - find a way around this
 			if $(@el).parent().children().length == 1
 				wrap = $(@el).parent()
-				#TODO - find a way around this
 				setTimeout (=> wrap.remove() ), 10
-			@model.get('parent').get('parent').get('children').add(@model)
-			console.log @model
 
 	# ------- End Bean Modification ------- #
 
@@ -188,7 +226,12 @@ class BeanView extends Backbone.View
 
 
 
-	# ------- Visuals ------- #
+	# ------- Don't Touch My Privates ------- #
+
+
+	text_length : ->
+		return @textarea.text().replace(/^\s+|\s+$/g, '').length
+
 
 	go_up : ->
 		if $(@el).prev('.bean').length 
@@ -217,6 +260,9 @@ class BeanView extends Backbone.View
 			if re_focus 
 				@focus_me(el.next())
 
+	# ------- End Don't Touch My Privates ------- #
+
+
 
 	focus_me : (el = $(@el)) ->
 		$('.bean').removeClass('focus')
@@ -224,14 +270,12 @@ class BeanView extends Backbone.View
 		el.find('.textarea').focus()
 		project.update_breadcrumb()
 
-	# ------- End Visuals ------- #
-
 
 
 
 	render : ->
 		@template = _.template($('#bean').html(), @model.toJSON())
-		#TODO - make this a new instance of a view
+		#TODO - this needs to be a backbone view and model so we can delete it later
 		other_html = ''
 		_.each @model.get('people').models, (person) ->
 			img_path 	= person.get('img_path')
@@ -241,7 +285,7 @@ class BeanView extends Backbone.View
 		$(@el).html(@template)
 		$(@el).find('.people').append(other_html)
 
-		#TODO - probably shouldn't go here, but not sure how to do this yet
+		#TODO - shouldn't go here, but not sure how to do this yet
 		if @model.get('my_hours_spent') == 0
 			$(@el).find('.hour_wrap').find('.hours').remove()
 

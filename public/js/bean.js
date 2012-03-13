@@ -79,7 +79,7 @@
     BeanView.prototype.test_to_add_bean = function(e) {
       var model_index;
       e.preventDefault();
-      if (this.textarea.text().length > 1) {
+      if (this.text_length()) {
         this.save_content();
         if (this.model.get('parent') !== null) {
           model_index = _.indexOf(this.model.get('parent').get('children').models, this.model) + 1;
@@ -93,7 +93,7 @@
     };
 
     BeanView.prototype.test_for_deletion = function() {
-      if (!this.textarea.text().replace(/^\s+|\s+$/g, '').length) {
+      if (!this.text_length()) {
         if (this.model.get('parent') !== null) {
           this.go_up();
           this.model.get('parent').get('children').remove(this.model);
@@ -107,48 +107,69 @@
     };
 
     BeanView.prototype.append_child_bean = function(bean, at_index) {
-      var is_not_last, new_bean;
-      if (!$(this.el).next().hasClass('wrap')) {
-        $(this.el).after('<div class="wrap"></div>');
-      }
-      new_bean = bean.get('view').render().el;
-      is_not_last = $(this.el).next().find('.bean').eq(at_index - 1);
-      if (is_not_last.length) {
-        is_not_last.after(new_bean);
+      var childs_html, closest_kin;
+      childs_html = this.gather_child_bean_views(bean, true);
+      closest_kin = $(this.el).next().children('.bean').eq(at_index - 1);
+      if (!closest_kin.length) {
+        $(this.el).after(childs_html);
+      } else if (closest_kin.next().hasClass('wrap')) {
+        closest_kin.next().after(childs_html);
+        childs_html.find('.bean:first').unwrap();
       } else {
-        $(this.el).next().append(new_bean);
+        closest_kin.after(childs_html);
+        childs_html.find('.bean:first').unwrap();
       }
-      return $(new_bean).find('.textarea').focus();
+      return $(bean.get('view').el).find('.textarea').focus();
+    };
+
+    BeanView.prototype.gather_child_bean_views = function(parent, master, wrap) {
+      var append_to, children, i, parent_view;
+      if (master == null) master = false;
+      if (wrap == null) wrap = $('<div class="wrap"></div>');
+      children = parent.get('children').models;
+      parent_view = $(parent.get('view').render().el);
+      wrap.append(parent_view);
+      if (children.length) {
+        append_to = $('<div class="wrap"></div>');
+        wrap.find(parent_view.after(append_to));
+        i = 0;
+        while (i < children.length) {
+          this.gather_child_bean_views(children[i], false, append_to);
+          i++;
+        }
+      }
+      if (master) return wrap;
     };
 
     BeanView.prototype.remove_child_bean = function(bean) {};
 
     BeanView.prototype.tab_over = function() {
-      var current_parent, new_parent, this_index;
-      if (this.model.get('parent') !== null) {
-        if (this.model !== this.model.collection.models[0]) {
-          this.save_content();
-          current_parent = this.model.get('parent').get('children');
-          this_index = _.indexOf(current_parent.models, this.model);
-          return new_parent = current_parent.models[this_index - 1].get('children').add(this.model);
-        }
+      var current_parent, index_as_a_child;
+      current_parent = this.model.get('parent').get('children');
+      index_as_a_child = _.indexOf(current_parent.models, this.model);
+      if (this.model.get('parent') !== null && index_as_a_child !== 0) {
+        this.save_content();
+        return current_parent.models[index_as_a_child - 1].get('children').add(this.model);
       }
     };
 
     BeanView.prototype.tab_back = function() {
-      var wrap,
+      var current_parent, future_family, new_index, wrap,
         _this = this;
       if (this.model.get('parent').get('parent') !== null) {
         this.save_content();
-        console.log(this.model);
+        future_family = this.model.get('parent').get('parent').get('children');
+        current_parent = this.model.get('parent');
+        new_index = _.indexOf(future_family.models, current_parent);
+        future_family.add(this.model, {
+          at: new_index + 1
+        });
         if ($(this.el).parent().children().length === 1) {
           wrap = $(this.el).parent();
-          setTimeout((function() {
+          return setTimeout((function() {
             return wrap.remove();
           }), 10);
         }
-        this.model.get('parent').get('parent').get('children').add(this.model);
-        return console.log(this.model);
       }
     };
 
@@ -200,6 +221,10 @@
 
     BeanView.prototype.update_hours_estimated = function(hrs) {
       return $(this.el).find('.hrs_total').text(hrs);
+    };
+
+    BeanView.prototype.text_length = function() {
+      return this.textarea.text().replace(/^\s+|\s+$/g, '').length;
     };
 
     BeanView.prototype.go_up = function() {

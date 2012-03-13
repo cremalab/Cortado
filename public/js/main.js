@@ -1,5 +1,5 @@
 (function() {
-  var ShortcutKeys,
+  var ShortcutKeys, iterate_over_items,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -91,6 +91,28 @@
       }), 10);
     }
   });
+
+  iterate_over_items = function(parent) {
+    var i, _results;
+    if (parent.get('parent') === null) {
+      console.debug(parent.get('content'), parent);
+    }
+    i = 0;
+    parent = parent.get('children').models;
+    _results = [];
+    while (i < parent.length) {
+      if (parent[i].get('children').models) {
+        console.debug(parent[i].get('content'), parent[i]);
+        iterate_over_items(parent[i]);
+      }
+      _results.push(i++);
+    }
+    return _results;
+  };
+
+  window.bean_debug = function() {
+    return iterate_over_items(project.get('beans').models[0]);
+  };
 
   $(function() {
     var bean, shortcuts;
