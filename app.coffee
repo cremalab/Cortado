@@ -92,4 +92,4 @@ app.get '/admin', ensure_authenticated, (req, res) ->
 	res.render 'admin'
 
 app.listen port
-console.log 'server running on port ' + port
+console.log 'server running on port ' + port 
