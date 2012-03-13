@@ -14,6 +14,9 @@ Run the server with node-dev
 If you're changing clientside coffeescript you'll have to compile yourself.
 `coffee -w -c public/js`
 
+### Database
+CouchDB is used and hosted at [irisCouch](http://cremalab.iriscouch.com/). You can inspect entries by visiting [irisCouchPath/_utils](http://cremalab.iriscouch.com/_utils/)
+
 ## Client Side Stack
 * [Backbone](http://documentcloud.github.com/backbone/)
 * [Backbone Relational](http://documentcloud.github.com/underscore/)

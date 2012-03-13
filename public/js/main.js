@@ -1,5 +1,5 @@
 (function() {
-  var ShortcutKeys, iterate_over_items,
+  var ShortcutKeys, create_new_project, iterate_over_items, use_default_project,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -19,22 +19,9 @@
     };
 
     ShortcutKeys.prototype.save_document = function(e) {
-      var all_data;
       e.preventDefault();
-      console.log(project.get('beans').models[0]);
-      all_data = JSON.stringify(project.get('beans').models[0].get('children'));
-      return $.ajax({
-        method: 'POST',
-        url: '/add/project',
-        data: 'project=' + all_data({
-          success: function() {
-            return console.log('yes');
-          },
-          error: function(err) {
-            return console.log(err);
-          }
-        })
-      });
+      this.beans_json = project.get('beans').models[0].toJSON();
+      return project.clean_up_json(this.beans_json);
     };
 
     ShortcutKeys.prototype.carriage_return = function(e) {
@@ -50,10 +37,18 @@
   })(Backbone.Shortcuts);
 
   window.Project = Backbone.RelationalModel.extend({
+    relations: [
+      {
+        type: Backbone.HasOne,
+        key: 'bean',
+        relatedModel: 'Bean',
+        collectionType: 'Beans'
+      }
+    ],
     initialize: function() {
       var people,
         _this = this;
-      _.bindAll(this, 'update_breadcrumb');
+      _.bindAll(this, 'update_breadcrumb', 'clean_up_json');
       this.set({
         'beans': new Beans
       });
@@ -89,6 +84,17 @@
         }
         return $('#breadcrumb').find('ul').append(new_crumb);
       }), 10);
+    },
+    clean_up_json: function(parent) {
+      var i, _results;
+      delete parent.view;
+      i = 0;
+      _results = [];
+      while (i < parent.children.length) {
+        this.clean_up_json(parent.children[i]);
+        _results.push(i++);
+      }
+      return _results;
     }
   });
 
@@ -114,16 +120,33 @@
     return iterate_over_items(project.get('beans').models[0]);
   };
 
-  $(function() {
-    var bean, shortcuts;
-    shortcuts = new ShortcutKeys;
-    window.project = new Project;
+  create_new_project = function() {
+    var bean;
     bean = new Bean;
     bean.url = '/add/project';
     bean.set({
       'content': 'Brand New Project'
     });
     return project.get('beans').add(bean);
+  };
+
+  use_default_project = function() {
+    var bean,
+      _this = this;
+    bean = new Bean;
+    bean.url = '/data/sample_project.json';
+    return bean.fetch({
+      success: function(data) {
+        return project.get('beans').add(bean);
+      }
+    });
+  };
+
+  $(function() {
+    var shortcuts;
+    shortcuts = new ShortcutKeys;
+    window.project = new Project;
+    return create_new_project();
   });
 
 }).call(this);

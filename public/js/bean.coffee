@@ -57,9 +57,6 @@ class BeanView extends Backbone.View
 		else if _.isEqual(@last_four_keys, [84, 83, 69, 51])
 			@change_hours_estimated()
 
-
-
-
 	
 
 
@@ -115,8 +112,7 @@ class BeanView extends Backbone.View
 		@focus_me($(bean.get('view').el))
 
 
-	# Do I have children?
-	# If I do, create a new wrapping element and append all my children to it
+
 	gather_child_bean_views : (parent, master = false, wrap = $('<div class="wrap"></div>'))  ->
 
 		children 		= parent.get('children').models
@@ -308,6 +304,10 @@ window.Bean = Backbone.RelationalModel.extend(
 		reverseRelation	:
 			key 		: 'parent'
 			type 		: Backbone.HasOne
+		#,
+		#type			: Backbone.HasMany
+		#key 			: 'people'
+		#relatedModel 	: 'person'
 	]
 	
 	defaults :
@@ -367,6 +367,7 @@ window.Beans = Backbone.Collection.extend(
 
 	initialize : ->
 		@on 'add', (bean, parent, options) =>
+			console.log bean
 			bean_view 	= bean.get('view')
 			if @is_master == true
 				$('#cortado').append(bean_view.render().el)
