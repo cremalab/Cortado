@@ -34,6 +34,7 @@
     };
 
     BeanView.prototype.handle_keys = function(e) {
+      var direction;
       if (!this.person_selector) {
         if (e.keyCode === 13) {
           return this.test_to_add_bean(e);
@@ -41,10 +42,14 @@
           return this.tab_back($(this.el));
         } else if (e.keyCode === 9) {
           return this.tab_over();
-        } else if (e.keyCode === 38) {
+        } else if (e.keyCode === 38 && e.shiftKey === false) {
           return this.go_up();
-        } else if (e.keyCode === 40) {
+        } else if (e.keyCode === 40 && e.shiftKey === false) {
           return this.go_down();
+        } else if (e.keyCode === 38 && e.shiftKey === true) {
+          return this.lasso($(this.el), direction = 'up');
+        } else if (e.keyCode === 40 && e.shiftKey === true) {
+          return this.lasso($('.focus'), direction = 'down');
         } else {
           return this.key_record(e.keyCode, e.shiftKey);
         }
@@ -269,6 +274,18 @@
           }
         }
         if (re_focus) return this.focus_me(el.next());
+      }
+    };
+
+    BeanView.prototype.lasso = function(focused, direction) {
+      if (direction === 'down') {
+        if ($(this.el).next().hasClass('bean')) {
+          return this.focus_me(focused.add($('.bean.focus').next('.bean')));
+        }
+      } else if (direction === 'up') {
+        if ($(this.el).prev('.bean').length) {
+          return this.focus_me(focused.add($('.bean.focus').prev('.bean')));
+        }
       }
     };
 

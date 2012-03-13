@@ -32,6 +32,10 @@
       return e.preventDefault();
     };
 
+    ShortcutKeys.prototype.lasso = function(e) {
+      return e.preventDefault();
+    };
+
     return ShortcutKeys;
 
   })(Backbone.Shortcuts);

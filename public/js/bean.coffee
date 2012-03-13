@@ -25,8 +25,10 @@ class BeanView extends Backbone.View
 			if e.keyCode == 13 then @test_to_add_bean(e)
 			else if e.keyCode == 9 && e.shiftKey == true then @tab_back($(@el))
 			else if e.keyCode == 9 then @tab_over()
-			else if e.keyCode == 38 then @go_up()
-			else if e.keyCode == 40 then @go_down()
+			else if e.keyCode == 38 && e.shiftKey == false then @go_up()
+			else if e.keyCode == 40 && e.shiftKey == false then @go_down()
+			else if e.keyCode == 38 && e.shiftKey == true then @lasso($(@el), direction = 'up')
+			else if e.keyCode == 40	&& e.shiftKey == true then @lasso($('.focus'), direction = 'down')
 			else @key_record(e.keyCode, e.shiftKey)
 
 
@@ -258,6 +260,15 @@ class BeanView extends Backbone.View
 
 			if re_focus 
 				@focus_me(el.next())
+
+	lasso : (focused,direction) ->
+
+		if direction ==	 'down'
+			if $(@el).next().hasClass('bean') 
+				@focus_me( focused.add( $('.bean.focus').next('.bean')) )
+		else if direction == 'up'
+			if $(@el).prev('.bean').length
+				@focus_me( focused.add( $('.bean.focus').prev('.bean')) )
 
 	# ------- End Don't Touch My Privates ------- #
 

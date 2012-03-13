@@ -4,6 +4,8 @@ class ShortcutKeys extends Backbone.Shortcuts
 		'enter'	: 'carriage_return'
 		'tab'		: 'tab_key'
 		'shift+tab'	: 'tab_key'
+		# 'shift+up'	: 'lasso'
+		# 'shift+down': 'lasso'
 
 	save_document : (e) ->
 		e.preventDefault()
@@ -13,6 +15,7 @@ class ShortcutKeys extends Backbone.Shortcuts
 
 	carriage_return : (e) -> e.preventDefault()
 	tab_key : (e) -> e.preventDefault()
+	lasso : (e) -> e.preventDefault()
 
 
 
