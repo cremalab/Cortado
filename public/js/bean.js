@@ -20,7 +20,7 @@
 
     BeanView.prototype.initialize = function() {
       this.last_four_keys = [];
-      return _.bindAll(this, 'focus_me', 'append_user', 'append_child_bean', 'remove_child_bean', 'update_hours_spent');
+      return _.bindAll(this, 'focus_me', 'append_user', 'append_child_bean', 'remove_child_bean', 'update_hours_spent', 'clean_up');
     };
 
     BeanView.prototype.save_content = function() {
@@ -106,6 +106,17 @@
       }
     };
 
+    BeanView.prototype.clean_up = function() {
+      var _this = this;
+      return setTimeout((function() {
+        var next;
+        next = $(_this.el).next();
+        if (next.find('>:first-child').hasClass('wrap') || next.children().length === 0) {
+          return $(_this.el).next().remove();
+        }
+      }), 10);
+    };
+
     BeanView.prototype.append_child_bean = function(bean, at_index) {
       var childs_html, closest_kin;
       childs_html = this.gather_child_bean_views(bean, true);
@@ -119,7 +130,7 @@
         closest_kin.after(childs_html);
         childs_html.find('.bean:first').unwrap();
       }
-      return $(bean.get('view').el).find('.textarea').focus();
+      return this.focus_me($(bean.get('view').el));
     };
 
     BeanView.prototype.gather_child_bean_views = function(parent, master, wrap) {
@@ -370,7 +381,7 @@
   window.Beans = Backbone.Collection.extend({
     initialize: function() {
       var _this = this;
-      return this.on('add', function(bean, parent, options) {
+      this.on('add', function(bean, parent, options) {
         var bean_view;
         bean_view = bean.get('view');
         if (_this.is_master === true) {
@@ -381,6 +392,9 @@
           }), 10);
         }
         return bean_view.focus_me();
+      });
+      return this.on('remove', function(bean, parent, options) {
+        return parent.parent.get('view').clean_up();
       });
     }
   });

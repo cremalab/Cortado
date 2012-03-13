@@ -13,6 +13,7 @@ class BeanView extends Backbone.View
 			'append_child_bean'
 			'remove_child_bean'
 			'update_hours_spent'
+			'clean_up'
 
 	save_content : ->
 		@model.set(content : @textarea.text())
@@ -85,12 +86,14 @@ class BeanView extends Backbone.View
 				else
 					$(@el).remove()
 
+	clean_up : ->
+		setTimeout (=>
+			next = $(@el).next()
+			if next.find('>:first-child').hasClass('wrap') || next.children().length == 0
+				$(@el).next().remove()
+		), 10
 
-	# In the voice of the parent
-	# Append a new child bean to me.
-	# Do I have a wrap to support child beans? If not add one.
-	# Look at the child bean. Does it have children?
-	# If it has children, iterate over them and append them to the bean.
+
 
 	append_child_bean : (bean, at_index) ->
 		
@@ -109,7 +112,7 @@ class BeanView extends Backbone.View
 			closest_kin.after(childs_html)
 			childs_html.find('.bean:first').unwrap()
 
-		$(bean.get('view').el).find('.textarea').focus()
+		@focus_me($(bean.get('view').el))
 
 
 	# Do I have children?
@@ -372,4 +375,7 @@ window.Beans = Backbone.Collection.extend(
 				#when I have a really bad bug and don't know wtf is going on.... it'l be this.
 				setTimeout (=>  bean.get('parent').get('view').append_child_bean(bean, options.index) ), 10
 			bean_view.focus_me()
+
+		@on 'remove', (bean, parent, options) =>
+			parent.parent.get('view').clean_up()
 )
