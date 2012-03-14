@@ -367,7 +367,6 @@ window.Beans = Backbone.Collection.extend(
 
 	initialize : ->
 		@on 'add', (bean, parent, options) =>
-			console.log bean
 			bean_view 	= bean.get('view')
 			if @is_master == true
 				$('#cortado').append(bean_view.render().el)

@@ -1,60 +1,20 @@
 express		= require 'express'
 path			= require 'path'
-passport 		= require 'passport'
 fs 			= require 'fs'
 stylus 		= require 'stylus'
 app 			= express.createServer()
 io			= require('socket.io').listen(app)
 port 			= process.env.PORT || 3000
 
-LocalStrategy	= require('passport-local').Strategy
+projects = ['southern_attraction', 'ampd']
 
-users = [
-	id: 		1
-	username:	'username'
-	password:	'password'
-	email:	'user@cremalab.com'
-]
-	
-passport.serializeUser (user, done) ->
-	done null, user.id
-
-passport.deserializeUser (id, done) ->
-	find_by_id id, (err, user) ->
-		done err, user
-
-passport.use(new LocalStrategy( (username, password, done) ->
-	process.nextTick ->
-		find_by_username username, (err, user) ->
-			return done err if err
-			return done null, false if !user
-			return done null, false if user.password != password
-			return done null, user
-))
-
-ensure_authenticated = (req, res, next) ->
-	return next()
-	#return next() if req.isAuthenticated()
-	#res.redirect '/login'
-
-find_by_id = (id, fn) ->
-	idx = id - 1
-	if users[idx]
-		fn null, users[idx]
-	else 
-		fn(new Error('User ' + id ' does not exist'))
-
-find_by_username = (username, fn) ->
-	for user in users
-		return fn(null, user) if user.username == username
-	fn null, null
-
-app.get '/add/project', ensure_authenticated, (req, res) ->
-	console.log req.query
-
+get_a_project = (project, next) ->
+	project_path = __dirname + '/data/projects/' + project  + '.json'
+	fs.readFile project_path, 'utf8', (err, data) ->
+		next(JSON.parse(data))
 
 app.configure ->
-	#app.use express.logger format: ':method :url :status'
+	app.use express.logger format: ':method :url :status'
 	app.use express.cookieParser()
 	app.use express.bodyParser()
 	app.use express.session secret: 'keyboard cat'
@@ -68,28 +28,26 @@ app.configure ->
 	app.set 'views', path.join __dirname, 'views'
 	app.set 'view engine', 'jade'
 
-	app.use passport.initialize()
-	app.use passport.session()
-
-
-date = new Date()
-months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-today = months[date.getMonth()] + ' ' + date.getUTCDate()
 
 app.get '/', (req, res) ->
 	res.render 'index'
-		today : today
+		projects : projects
+
+app.get '/project/update', (req, res) ->
+	project_path = __dirname + '/data/projects/' + req.query.project_id + '.json'
+	fs.writeFile project_path, req.query.project_data, (err) ->
+	res.end()
+
+app.post '/project', (req, res) ->
+	get_a_project req.body.project, (project_data) ->
+		res.render 'project'
+			num_requests : 3
+			project_data : JSON.stringify(project_data)
+			project_id : req.body.project
+
+app.get '/project/new', (req, res) ->
+	res.render 'project'
 		num_requests : 3
-
-app.get '/login', (req, res) ->
-	res.render 'login'
-
-app.get '/logout', (req, res) ->
-	req.logout()
-	res.render 'logout'
-
-app.get '/admin', ensure_authenticated, (req, res) ->
-	res.render 'admin'
 
 app.listen port
 console.log 'server running on port ' + port 

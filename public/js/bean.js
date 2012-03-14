@@ -383,7 +383,6 @@
       var _this = this;
       this.on('add', function(bean, parent, options) {
         var bean_view;
-        console.log(bean);
         bean_view = bean.get('view');
         if (_this.is_master === true) {
           $('#cortado').append(bean_view.render().el);

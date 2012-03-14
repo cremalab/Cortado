@@ -1,7 +1,10 @@
-section#document
-	header
-		a#save(href='#') Save
-		div#breadcrumb
-			ul
+section#login
+	h1 Cortado
 
-	#cortado
+	label Select Project
+	form(method='post', action='/project')
+		select(name='project')
+			each project in projects
+				option(value=project)= project
+
+		input(type='submit')

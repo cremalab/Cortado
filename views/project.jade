@@ -1,0 +1,30 @@
+- if (typeof(project_data) != 'undefined')
+	// TODO - this should probably be better
+	!= '<script>'
+	!= '$(function(){'
+	!= 'window.project = new Project();'
+	!= 'var bean = new Bean('
+	!= project_data
+	!= ');'
+	!= 'project.get("beans").add(bean);'
+	!= '$("section#document").data("project_id", "'
+	!= project_id
+	!= '");'
+	!= '});'
+	!= '</script>'
+
+header#main
+	input(type='search', placeholder='Search')
+	div#requests
+		p Pending Requests
+		div.user_photo
+			img(src='/img/placeholder.jpg', alt='placeholder')
+		div.number= num_requests
+
+section#document
+	header
+		a#save(href='#') Save
+		div#breadcrumb
+			ul
+
+	#cortado
